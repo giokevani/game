@@ -39,7 +39,8 @@ export class HUD {
     this.action = h('button', { class: 'action-btn', onpointerdown: (e) => { e.stopPropagation(); game.input.actionPressed = true; } }, this.actionIco, this.actionLbl);
     this.jump = h('button', { class: 'round-btn', onpointerdown: (e) => { e.stopPropagation(); game.input.jumpPressed = true; } }, '⬆');
     this.emote = h('button', { class: 'round-btn', style: { width: '54px', height: '54px', fontSize: '24px' }, onpointerdown: (e) => { e.stopPropagation(); click(); game.openEmotes(); } }, '😊');
-    this.br = h('div', { class: 'hud-br' }, this.action, h('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' } }, this.emote, this.jump));
+    this.rideSlot = h('div');
+    this.br = h('div', { class: 'hud-br' }, this.action, h('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' } }, this.rideSlot, this.emote, this.jump));
     r.appendChild(this.br);
 
     this.bl = h('div', { class: 'hud-bl' }, this.zoneTxt);
@@ -76,7 +77,10 @@ export class HUD {
 
   setAction(it) {
     if (!it) { this.action.classList.remove('show'); this.curAction = null; return; }
-    if (this.curAction === it) return;
+    if (this.curAction === it) {
+      if (typeof it.label === 'function') { const l = it.label(); if (l !== this.actionLbl.textContent) this.actionLbl.textContent = l; }
+      return;
+    }
     this.curAction = it;
     this.actionIco.textContent = it.icon || '✋';
     this.actionLbl.textContent = typeof it.label === 'function' ? it.label() : it.label;

@@ -136,7 +136,7 @@ export class HouseSystem {
     UI.root().appendChild(fade);
     requestAnimationFrame(() => { fade.style.opacity = night ? '0.92' : '0.5'; });
     setTimeout(() => {
-      if (night) g.sky.setTime(0.29);
+      if (night) { g.sky.setTime(0.29); g.state.stats.nightsSlept = (g.state.stats.nightsSlept || 0) + 1; }
       fade.style.opacity = '0';
       setTimeout(() => fade.remove(), 900);
       UI.toast(night ? 'Good morning! ☀️ You feel rested.' : 'What a lovely nap! 😴', { icon: '🌅' });

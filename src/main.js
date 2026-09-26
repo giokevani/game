@@ -29,12 +29,15 @@ async function boot() {
   const btn = h('button', { class: 'btn big tap-start' }, game.fresh ? '🌸 Play' : '▶ Continue');
   card.appendChild(btn);
   const go = () => {
+    game.audio.unlock();
     loading.classList.add('hide');
     setTimeout(() => loading.remove(), 700);
     game.emit('start');
   };
   btn.addEventListener('click', go, { once: true });
   if (new URLSearchParams(location.search).has('autostart')) go();
+  // iOS only allows sound after a touch
+  window.addEventListener('pointerdown', () => game.audio.unlock(), { passive: true });
 }
 
 boot().catch((e) => {

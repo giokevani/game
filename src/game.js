@@ -12,6 +12,7 @@ import { loadGame, saveGame, requestPersistence } from './core/save.js';
 import { addCoins, addXP, level } from './core/state.js';
 import { HOME_PLOT } from './data/map.js';
 import { FX } from './engine/fx.js';
+import { Audio } from './engine/audio.js';
 
 export class Game {
   constructor() {
@@ -26,6 +27,7 @@ export class Game {
     this.state = state;
     this.fresh = fresh;
     requestPersistence();
+    this.audio = new Audio(state.settings);
     progress(0.1, 'Waking up…');
     this.quality = new QualityManager(state.settings);
     const app = document.getElementById('app');
@@ -45,12 +47,14 @@ export class Game {
     this.avatar = new Avatar(state.player.look);
     scene.add(this.avatar.root);
     this.player = new Player(this.world, this.avatar);
+    this.player.onJump = () => this.audio?.play('jump');
     const spawn = state.player.pos;
     if (spawn) this.player.teleport(spawn[0], undefined, spawn[2], spawn[3]);
     else this.player.teleport(HOME_PLOT.cx, undefined, HOME_PLOT.front + 5, Math.PI);
     this.rig = new CameraRig(camera, this.world);
     this.rig.yaw = this.player.facing + Math.PI;
     this.rig.snap(this.player.pos);
+    this.cameraOpts = () => ({ distMul: this.player.vehicle ? 1.4 : 1 });
 
     this.input = new Input(renderer.domElement, UI.root());
     this.hud = new HUD(this);
@@ -94,7 +98,7 @@ export class Game {
     const busy = this.mode !== 'play' || UI.anyModalOpen() || UI.dialogOpen();
     this.input.enabled = !busy;
     this.player.frozen = busy;
-    if (this.mode === 'play' || this.mode === 'cutscene') this.player.update(dt, this.input, this.rig.yaw);
+    if (this.mode === 'play') this.player.update(dt, this.input, this.rig.yaw);
     for (const s of this.systems) s.update?.(dt, this);
     if (this.mode === 'play') this.rig.update(dt, this.input, this.player.pos, this.cameraOpts?.() || {});
     else if (this.mode === 'cutscene') this.rig.update(dt, this.input, this.player.pos);
@@ -102,6 +106,7 @@ export class Game {
     this.state.time = this.sky.t;
     this.world.update(dt, this.player.pos);
     this.fx.update(dt);
+    this.audio.night = this.sky.state.night;
 
     // interaction prompt
     if (this.mode === 'play' && !busy) {
@@ -148,6 +153,7 @@ export class Game {
   emit(ev, ...a) { for (const fn of this._ev?.[ev] || []) fn(...a); }
 
   save() {
+    if (this.noSave) return false;
     const p = this.player.pos;
     this.state.player.pos = [p.x, p.y, p.z, this.player.facing];
     return saveGame(this.state);

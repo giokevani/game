@@ -295,7 +295,7 @@ export function invalidFurniture(h, catalog) {
 }
 
 // ---------- Home Rating ----------
-export const STAR_POINTS = [0, 60, 170, 340, 580, 900];
+export const STAR_POINTS = [0, 150, 380, 620, 880, 1150];
 
 export function homeRating(h, catalog) {
   const tiles = Object.keys(h.tiles).length;
@@ -313,14 +313,14 @@ export function homeRating(h, catalog) {
   const hasBath = items.some((i) => i.cat === 'bath');
   const hasKitchen = items.some((i) => i.use === 'cook' || i.id === 'fridge');
   const parts = {
-    space: Math.min(120, tiles * 2),
-    rooms: Math.min(120, rs.length * 18),
-    furniture: Math.min(260, items.length * 4),
-    variety: Math.min(180, unique * 5 + cats * 8),
-    style: Math.min(90, (papers.size - 1) * 8 + (floors - 1) * 8),
-    lights: Math.min(50, lights * 8),
-    garden: Math.min(60, garden * 7),
-    windows: Math.min(40, openings * 4),
+    space: Math.min(200, tiles * 2),
+    rooms: Math.min(160, rs.length * 16),
+    furniture: Math.min(300, items.length * 3),
+    variety: Math.min(240, unique * 4 + cats * 6),
+    style: Math.min(120, (papers.size - 1) * 8 + (floors - 1) * 8),
+    lights: Math.min(80, lights * 6),
+    garden: Math.min(100, garden * 6),
+    windows: Math.min(60, openings * 3),
     essentials: (hasBed ? 20 : 0) + (hasBath ? 20 : 0) + (hasKitchen ? 20 : 0),
   };
   const score = Object.values(parts).reduce((a, b) => a + b, 0);

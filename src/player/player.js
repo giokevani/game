@@ -167,6 +167,21 @@ export class CameraRig {
       this.target.y + Math.sin(cp) * d,
       this.target.z + Math.cos(this.yaw) * Math.cos(cp) * d
     );
+    // pull the camera in front of buildings so it never ends up inside one
+    if (o.collide !== false) {
+      const steps = 10;
+      for (let i = 2; i <= steps; i++) {
+        const t = i / steps;
+        const x = this.target.x + (pos.x - this.target.x) * t;
+        const y = this.target.y + (pos.y - this.target.y) * t;
+        const z = this.target.z + (pos.z - this.target.z) * t;
+        if (y < 6.5 && this.world.blockedAt(x, z, y)) {
+          const k = Math.max(0.15, (i - 1.2) / steps);
+          pos.set(this.target.x + (pos.x - this.target.x) * k, this.target.y + (pos.y - this.target.y) * k, this.target.z + (pos.z - this.target.z) * k);
+          break;
+        }
+      }
+    }
     const gy = this.world.groundAt(pos.x, pos.z, pos.y) + 0.6;
     if (pos.y < gy) pos.y = gy;
     this.camera.position.copy(pos);

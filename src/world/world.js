@@ -91,6 +91,18 @@ export class World {
     }
   }
 
+  // is a point inside a solid building (ignores the player's own house and furniture)
+  blockedAt(x, z, y) {
+    const list = this.grid.get(`${Math.floor(x / CELL)},${Math.floor(z / CELL)}`);
+    if (!list) return false;
+    for (const c of list) {
+      if (c.off || c.tag === 'house' || c.tag === 'furn' || y > c.top) continue;
+      if (c.circle) { if (c.r > 1.2 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.r * c.r) return true; }
+      else if (x > c.x1 && x < c.x2 && z > c.z1 && z < c.z2) return true;
+    }
+    return false;
+  }
+
   // ground height under x,z for something whose feet are at currentY
   groundAt(x, z, currentY = 0, step = 0.75) {
     let h = terrainHeight(x, z);
