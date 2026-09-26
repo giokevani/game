@@ -295,7 +295,7 @@ export function invalidFurniture(h, catalog) {
 }
 
 // ---------- Home Rating ----------
-export const STAR_POINTS = [0, 150, 380, 620, 880, 1150];
+export const STAR_POINTS = [0, 150, 380, 640, 880, 1100];
 
 export function homeRating(h, catalog) {
   const tiles = Object.keys(h.tiles).length;

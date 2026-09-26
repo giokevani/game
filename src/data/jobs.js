@@ -43,7 +43,7 @@ export const CAKE = {
   ],
 };
 export function cakeRules(lvl) {
-  return { tiers: lvl >= 4 ? 2 : 1, toppings: lvl >= 3 ? 2 : 1, time: 80 - Math.min(20, (lvl - 1) * 5), pay: 30 };
+  return { tiers: lvl >= 4 ? 2 : 1, toppings: lvl >= 3 ? 2 : 1, time: 80 - Math.min(20, (lvl - 1) * 5), pay: 22 };
 }
 export function randomCake(lvl, r = Math.random) {
   const pick = (l) => { const ok = l.filter((x) => x.lvl <= lvl); return ok[Math.floor(r() * ok.length)].id; };
@@ -74,7 +74,7 @@ export const RIBBONS = [
   { id: 'pink', color: '#ff8fc0' }, { id: 'blue', color: '#7fc6ff' }, { id: 'yellow', color: '#ffd45e' }, { id: 'purple', color: '#b58cff' },
 ];
 export function floristRules(lvl) {
-  return { count: 3 + Math.min(3, lvl - 1), memory: lvl >= 2, show: Math.max(2.5, 5 - lvl * 0.5), time: 75, pay: 36, ribbon: lvl >= 2 };
+  return { count: 3 + Math.min(3, lvl - 1), memory: lvl >= 2, show: Math.max(2.5, 5 - lvl * 0.5), time: 75, pay: 28, ribbon: lvl >= 2 };
 }
 export function randomBouquet(lvl, r = Math.random) {
   const ok = FLOWERS.filter((f) => f.lvl <= lvl);
@@ -89,22 +89,22 @@ export function sameBouquet(a, b) {
 
 // ---------- fishing ----------
 export const FISH = [
-  { id: 'sardine', name: 'Sardine', icon: '🐟', rar: 'common', w: 30, price: 15, speed: 0.8 },
-  { id: 'clown', name: 'Clownfish', icon: '🐠', rar: 'common', w: 24, price: 22, speed: 0.9 },
-  { id: 'crab', name: 'Crab', icon: '🦀', rar: 'common', w: 22, price: 20, speed: 0.7 },
-  { id: 'shrimp', name: 'Shrimp', icon: '🦐', rar: 'common', w: 20, price: 18, speed: 1.0 },
-  { id: 'starfish', name: 'Starfish', icon: '⭐', rar: 'common', w: 16, price: 25, speed: 0.5 },
-  { id: 'puffer', name: 'Pufferfish', icon: '🐡', rar: 'uncommon', w: 12, price: 45, speed: 1.1 },
-  { id: 'squid', name: 'Squid', icon: '🦑', rar: 'uncommon', w: 10, price: 55, speed: 1.3 },
-  { id: 'jelly', name: 'Jellyfish', icon: '🪼', rar: 'uncommon', w: 10, price: 50, speed: 1.0, night: true },
-  { id: 'shell', name: 'Nautilus', icon: '🐚', rar: 'uncommon', w: 9, price: 60, speed: 0.9 },
-  { id: 'octopus', name: 'Octopus', icon: '🐙', rar: 'rare', w: 6, price: 110, speed: 1.5 },
-  { id: 'lobster', name: 'Lobster', icon: '🦞', rar: 'rare', w: 5, price: 130, speed: 1.4 },
-  { id: 'sunfish', name: 'Sunfish', icon: '🐠', rar: 'rare', w: 4, price: 150, speed: 1.5, day: true, hue: 40 },
-  { id: 'moonfish', name: 'Moon Fish', icon: '🐟', rar: 'rare', w: 4, price: 160, speed: 1.6, night: true, hue: 220 },
-  { id: 'shark', name: 'Tiny Shark', icon: '🦈', rar: 'ultra', w: 2.2, price: 300, speed: 1.9 },
-  { id: 'golden', name: 'Golden Fish', icon: '🐟', rar: 'legendary', w: 0.8, price: 600, speed: 2.1, hue: 45, gold: true },
-  { id: 'rainbow', name: 'Rainbow Fish', icon: '🐠', rar: 'legendary', w: 0.6, price: 800, speed: 2.2, rainbow: true },
+  { id: 'sardine', name: 'Sardine', icon: '🐟', rar: 'common', w: 30, price: 12, speed: 0.8 },
+  { id: 'clown', name: 'Clownfish', icon: '🐠', rar: 'common', w: 24, price: 18, speed: 0.9 },
+  { id: 'crab', name: 'Crab', icon: '🦀', rar: 'common', w: 22, price: 16, speed: 0.7 },
+  { id: 'shrimp', name: 'Shrimp', icon: '🦐', rar: 'common', w: 20, price: 14, speed: 1.0 },
+  { id: 'starfish', name: 'Starfish', icon: '⭐', rar: 'common', w: 16, price: 20, speed: 0.5 },
+  { id: 'puffer', name: 'Pufferfish', icon: '🐡', rar: 'uncommon', w: 12, price: 36, speed: 1.1 },
+  { id: 'squid', name: 'Squid', icon: '🦑', rar: 'uncommon', w: 10, price: 44, speed: 1.3 },
+  { id: 'jelly', name: 'Jellyfish', icon: '🪼', rar: 'uncommon', w: 10, price: 40, speed: 1.0, night: true },
+  { id: 'shell', name: 'Nautilus', icon: '🐚', rar: 'uncommon', w: 9, price: 48, speed: 0.9 },
+  { id: 'octopus', name: 'Octopus', icon: '🐙', rar: 'rare', w: 6, price: 88, speed: 1.5 },
+  { id: 'lobster', name: 'Lobster', icon: '🦞', rar: 'rare', w: 5, price: 104, speed: 1.4 },
+  { id: 'sunfish', name: 'Sunfish', icon: '🐠', rar: 'rare', w: 4, price: 120, speed: 1.5, day: true, hue: 40 },
+  { id: 'moonfish', name: 'Moon Fish', icon: '🐟', rar: 'rare', w: 4, price: 128, speed: 1.6, night: true, hue: 220 },
+  { id: 'shark', name: 'Tiny Shark', icon: '🦈', rar: 'ultra', w: 2.2, price: 240, speed: 1.9 },
+  { id: 'golden', name: 'Golden Fish', icon: '🐟', rar: 'legendary', w: 0.8, price: 480, speed: 2.1, hue: 45, gold: true },
+  { id: 'rainbow', name: 'Rainbow Fish', icon: '🐠', rar: 'legendary', w: 0.6, price: 640, speed: 2.2, rainbow: true },
 ];
 export const FISH_BY = Object.fromEntries(FISH.map((f) => [f.id, f]));
 export function rollFish(lvl, night, r = Math.random) {
@@ -141,7 +141,7 @@ export function growth(plot, now = Date.now()) {
 
 // ---------- delivery ----------
 export function deliveryPay(dist, lvl) {
-  return Math.round((35 + dist * 0.45) * payMul(lvl));
+  return Math.round((28 + dist * 0.38) * payMul(lvl));
 }
 export function deliveryTime(dist, lvl) {
   return Math.round(18 + dist / 5.2 - (lvl - 1) * 1.5);

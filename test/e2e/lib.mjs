@@ -15,10 +15,12 @@ export const IPHONE_11_PRO_LANDSCAPE = {
 };
 
 export async function startServer(port = 4173) {
-  const proc = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
+  // run vite directly (not through npx) so killing it really stops the server
+  const proc = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
   await new Promise((res, rej) => {
     const t = setTimeout(() => rej(new Error('server timeout')), 20000);
     proc.stdout.on('data', (d) => { if (String(d).includes('http')) { clearTimeout(t); res(); } });
+    proc.stderr.on('data', (d) => { if (/in use/i.test(String(d))) { clearTimeout(t); rej(new Error('port in use: ' + port)); } });
   });
   return { url: `http://localhost:${port}/`, stop: () => proc.kill() };
 }

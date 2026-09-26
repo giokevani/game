@@ -54,6 +54,7 @@ export class QuestSystem {
       if (q.done.includes(qq.id) || q.active.some((a) => a.id === qq.id)) return;
       if (i > doneN + 2) return;
       if ((qq.lvl || 1) > lvl) return;
+      if (qq.after && !q.done.includes(qq.after)) return;
       out.push(qq);
     });
     return q.active.length >= MAX_ACTIVE ? [] : out.slice(0, MAX_ACTIVE - q.active.length);

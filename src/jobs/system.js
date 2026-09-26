@@ -105,8 +105,8 @@ export class JobSystem {
     const hooks = g.testHooks;
     let res;
     try {
-      if (id === 'bakery') res = await bakeryGame(lvl, { sfx, hooks, onWin: ({ pay }) => { g.reward(pay, 8 + lvl * 2, 'job'); this.gain('bakery'); } });
-      else if (id === 'florist') res = await floristGame(lvl, { sfx, hooks, onWin: ({ pay }) => { g.reward(pay, 9 + lvl * 2, 'job'); this.gain('florist'); } });
+      if (id === 'bakery') res = await bakeryGame(lvl, { sfx, hooks, onWin: ({ pay }) => { g.reward(pay, 4 + lvl, 'job'); this.gain('bakery'); } });
+      else if (id === 'florist') res = await floristGame(lvl, { sfx, hooks, onWin: ({ pay }) => { g.reward(pay, 5 + lvl, 'job'); this.gain('florist'); } });
       else if (id === 'fishing') res = await fishingGame(lvl, {
         sfx, hooks, night: () => g.sky.state.night > 0.5,
         onWin: ({ fish, pay }) => {
@@ -114,7 +114,7 @@ export class JobSystem {
           const isNew = !c[fish];
           c[fish] = (c[fish] || 0) + 1;
           this.state.stats.fishCaught++;
-          g.reward(pay, 10 + lvl * 2, 'job');
+          g.reward(pay, 5 + lvl, 'job');
           this.gain('fishing');
           g.emit('fish', fish, FISH_BY[fish].rar);
           return isNew;
@@ -164,7 +164,7 @@ export class JobSystem {
     st.collections.plants[s.id] = (st.collections.plants[s.id] || 0) + 1;
     st.stats.harvests++;
     g.fx.burst(new THREE.Vector3(bed.spot.x, 0.8, bed.spot.z), 'petals');
-    g.reward(pay, 10 + Math.round(s.sell / 10), 'harvest');
+    g.reward(pay, 5 + Math.round(s.sell / 20), 'harvest');
     toast(`Harvested a ${s.name}! ${s.icon}`, { icon: '🧺' });
     this.gain('garden');
     g.emit('harvest', s.id);
@@ -293,7 +293,7 @@ export class JobSystem {
       d.n++;
       d.earned += d.pay;
       game.fx.burst(new THREE.Vector3(t.x, 1, t.z), 'confetti');
-      game.reward(d.pay, 14 + this.level('delivery') * 3, 'job');
+      game.reward(d.pay, 10 + this.level('delivery') * 2, 'job');
       this.gain('delivery');
       if (d.n >= d.max) { this.stopDelivery(false); celebrate('Shift complete!', `All ${d.max} packages delivered 📦`); this.game.reward(60, 20); }
       else this.nextDelivery();

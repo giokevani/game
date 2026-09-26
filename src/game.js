@@ -34,6 +34,14 @@ export class Game {
     const { renderer, scene, camera } = createRenderer(app, this.quality);
     this.renderer = renderer; this.scene = scene; this.camera = camera;
     this.quality.onChange = (lvl) => this.applyQuality(lvl);
+    // iOS can drop the WebGL context when the app is in the background
+    renderer.domElement.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      this.save();
+      const o = UI.h('div', { class: 'modal-bg interactive', style: { zIndex: 95 } }, UI.h('div', { class: 'panel narrow', style: { padding: '24px', textAlign: 'center' } },
+        UI.h('h2', {}, '🌸 Welcome back!'), UI.h('button', { class: 'btn big', onclick: () => location.reload() }, '▶ Tap to continue')));
+      UI.root().appendChild(o);
+    });
 
     this.fx = new FX(scene);
     this.sky = new Sky(scene);

@@ -26,6 +26,7 @@ export class HouseSystem {
     this.build = new BuildMode(game, this);
     game.openBuild = () => this.build.enter();
     game.house = this;
+    game.debug = { ...(game.debug || {}), FURN, HM };
     const lastStars = game.state.stats.homeStars || 0;
     this.lastStars = lastStars;
   }

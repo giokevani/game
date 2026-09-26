@@ -6,7 +6,7 @@ export const MAX_LEVEL = 30;
 
 // XP needed to go from level n to n+1
 export function xpToNext(level) {
-  return 80 + level * 40;
+  return 100 + level * 55;
 }
 
 export function levelFromXP(xp) {
@@ -48,7 +48,7 @@ export function newState() {
     eggs: [],           // {uid, type, progress}
     jobs: { bakery: { xp: 0, best: 0 }, florist: { xp: 0, best: 0 }, garden: { xp: 0, best: 0 }, fishing: { xp: 0, best: 0 }, delivery: { xp: 0, best: 0 } },
     garden: [],         // per garden bed {seed, plantedAt, water}
-    quests: { active: [], done: [], counters: {} },
+    quests: { active: [], done: [], counters: {}, metNpcs: [] },
     collections: { shells: [], fish: {}, plants: {}, stickers: [], zones: [] },
     unlocks: { cave: false, sky: false, plot: 0 },
     stats: { playTime: 0, coinsEarned: 0, coinsSpent: 0, petTasks: 0, jobsDone: 0, steps: 0, itemsPlaced: 0, eggsHatched: 0, fishCaught: 0, harvests: 0 },

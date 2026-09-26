@@ -137,7 +137,7 @@ export function bakeryGame(lvl, o) {
       if (over) return;
       if (sameCake(order, cake)) {
         done++; streak++;
-        const pay = Math.round((rules.pay + streak * 4) * (1 + (lvl - 1) * 0.2));
+        const pay = Math.round((rules.pay + Math.min(15, streak * 3)) * (1 + (lvl - 1) * 0.2));
         earned += pay;
         o.onWin?.({ pay, streak });
         o.sfx?.('coin');

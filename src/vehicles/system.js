@@ -188,7 +188,7 @@ export class VehicleSystem {
     const st = this.st;
     const g = this.game;
     if (up && !st.unlocks.sky) {
-      if (levelOf(st) < 11) return toast('Skye will fly you to Sky Island when you reach level 11! 🎈', { icon: '🔒' });
+      if (levelOf(st) < 13) return toast('Skye will fly you to Sky Island when you reach level 13! 🎈', { icon: '🔒' });
       return toast('Talk to Skye the pilot first! 🎈', { icon: '💬' });
     }
     if (this.riding) this.dismount();
@@ -241,7 +241,7 @@ export class VehicleSystem {
         game.mode = 'play';
         game.hud.setVisible(true);
         const off = f.up ? new THREE.Vector3(-2.5, 0, -2.5) : new THREE.Vector3(2.8, 0, 2.8);
-        game.player.teleport(f.to.x + off.x, undefined, f.to.z + off.z);
+        game.player.teleport(f.to.x + off.x, f.up ? f.to.y : undefined, f.to.z + off.z);
         game.rig.snap(game.player.pos);
         if (f.up) celebrate('Sky Island! ☁️', 'Welcome to the castle in the clouds');
       }

@@ -1,7 +1,7 @@
 // Map with fast travel, and the settings menu (sound, graphics, backup).
 import * as THREE from 'three';
 import { h, modal, toast, click, confirmBox, promptBox } from './ui.js';
-import { WORLD, ROADS, PATHS, PLAZA, BUILDINGS, POND, PIER, ZONES, HOME_PLOT, shoreZ, BALLOON, GARDEN, PLAYGROUND } from '../data/map.js';
+import { WORLD, ROADS, PATHS, PLAZA, BUILDINGS, POND, PIER, ZONES, HOME_PLOT, shoreZ, BALLOON, GARDEN, PLAYGROUND, SKY_ISLAND } from '../data/map.js';
 import { exportCode, importCode, wipeGame, saveGame } from '../core/save.js';
 import { levelFromXP } from '../core/state.js';
 
@@ -11,7 +11,7 @@ const TRAVEL = {
   park: [80, -22],
   beach: [0, 44],
   cove: [-112, 46],
-  sky: [2, -92],
+  sky: [2, -94, SKY_ISLAND.y + 0.15],
 };
 
 export function setupMenus(game) {
@@ -74,9 +74,9 @@ export function setupMenus(game) {
         if (z.id === 'sky' && !st.unlocks.sky) return;
         m.close();
         game.vehicles?.dismount();
-        const [tx, tz] = TRAVEL[z.id];
+        const [tx, tz, ty] = TRAVEL[z.id];
         game.fx.burst(game.player.pos, 'puff');
-        game.player.teleport(tx, undefined, tz);
+        game.player.teleport(tx, ty, tz);
         game.pets?.actor?.place(new THREE.Vector3(tx - 1, game.player.pos.y, tz - 1));
         game.rig.snap(game.player.pos);
         game.fx.burst(game.player.pos, 'sparkle');
@@ -114,7 +114,7 @@ export function setupMenus(game) {
             click();
             const code = await promptBox('Restore', 'Paste your backup code:', '', 200000);
             if (!code || !code.startsWith('BB1:')) return;
-            try { const ns = importCode(code); saveGame(ns); location.reload(); } catch { toast('That code did not work 😕', { icon: '⚠️' }); }
+            try { const ns = importCode(code); game.noSave = true; saveGame(ns); location.reload(); } catch { toast('That code did not work 😕', { icon: '⚠️' }); }
           } }, '📥 Restore')),
         h('div', { class: 'section-title' }, '🧑 Player'),
         h('div', { class: 'muted' }, `${st.player.name || 'Blossom'} · Level ${levelFromXP(st.player.xp).level} · played ${Math.floor(st.stats.playTime / 60)} min`),

@@ -8,7 +8,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host --port 4173",
-    "test": "node --test test/unit/",
+    "test": "node --test test/unit/*.test.mjs",
     "test:e2e": "node test/e2e/run.mjs",
     "sim": "node test/sim/economy.mjs"
   },

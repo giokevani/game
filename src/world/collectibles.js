@@ -6,7 +6,7 @@ import { shoreZ, PIER, POND, SKY_ISLAND } from '../data/map.js';
 import { toast } from '../ui/ui.js';
 
 // [x, z, yOverride?]  'b' = on the beach (z computed from the shoreline)
-const SPOTS = [
+export const SPOTS = [
   ['b', -88], ['b', -66], ['b', -46], ['b', -28], ['b', -3], ['b', 14], ['b', 46], ['b', 66], ['b', 88], ['b', 106], ['b', 136],
   [30, PIER.z2 + 3, PIER.y],
   [POND.x + POND.rx + 3, POND.z - 6], [107, -9], [124, -66], [84, -70], [132, -92], [70, -30], [58, -92],
