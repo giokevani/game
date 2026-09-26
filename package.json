@@ -1,0 +1,22 @@
+{
+  "name": "blossom-bay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Blossom Bay - a cozy 3D life-sim for iPhone Safari",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host --port 4173",
+    "test": "node --test test/unit/",
+    "test:e2e": "node test/e2e/run.mjs",
+    "sim": "node test/sim/economy.mjs"
+  },
+  "dependencies": {
+    "@fontsource/fredoka": "^5.3.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}
