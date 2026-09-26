@@ -1,4 +1,6 @@
 // Registers all gameplay systems in order.
+import { HouseSystem } from './house/system.js';
+
 export function registerSystems(game) {
-  // filled in as systems are added
+  game.addSystem(new HouseSystem());
 }

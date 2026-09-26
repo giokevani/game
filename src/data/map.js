@@ -28,7 +28,7 @@ export const PATHS = [
 
 export const PLAZA = { x: 0, z: -10, r: 14 };
 
-export const HOME_PLOT = { cx: -66, front: -65, sizes: [8, 11, 14], tile: 2 };
+export const HOME_PLOT = { cx: -66, front: -65, sizes: [8, 10, 12, 14], tile: 2 };
 
 // Buildings. face: direction the front door faces (radians around y; 0 = +z / south)
 export const BUILDINGS = [

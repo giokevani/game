@@ -97,7 +97,8 @@ export class World {
     for (const p of this.platforms) {
       if (p.off) continue;
       let inside;
-      if (p.r) inside = (x - p.x) ** 2 + (z - p.z) ** 2 < p.r * p.r;
+      if (p.test) inside = p.test(x, z);
+      else if (p.r) inside = (x - p.x) ** 2 + (z - p.z) ** 2 < p.r * p.r;
       else inside = x > p.x1 && x < p.x2 && z > p.z1 && z < p.z2;
       if (inside && p.y > h && p.y <= currentY + step) h = p.y;
     }
