@@ -50,6 +50,7 @@ export function newHouse() {
   const start = [
     ['bed_single', 17, 21.25, 0, 0], ['nightstand', 17.5, 23.3, 0, 7], ['sofa', 12, 20.75, 0, 5], ['rug_round', 12, 22.75, 0, 0],
     ['coffee_table', 12, 22.75, 0, 7], ['armchair', 15, 23.2, 3, 0], ['plant_big', 10.6, 25.3, 0, 0], ['floor_lamp', 14.9, 20.6, 0, 2],
+    ['food_bowl', 10.6, 20.6, 0, 10], ['water_bowl', 10.6, 21.3, 0, 5], ['pet_bed', 15.35, 21.9, 0, 0],
   ];
   for (const [id, x, z, r, c] of start) addFurniture(h, id, x, z, r, c);
   addFurniture(h, 'table_lamp', 17.5, 23.3, 0, 0, 0.55);

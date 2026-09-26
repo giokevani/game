@@ -11,6 +11,7 @@ import * as UI from './ui/ui.js';
 import { loadGame, saveGame, requestPersistence } from './core/save.js';
 import { addCoins, addXP, level } from './core/state.js';
 import { HOME_PLOT } from './data/map.js';
+import { FX } from './engine/fx.js';
 
 export class Game {
   constructor() {
@@ -32,6 +33,7 @@ export class Game {
     this.renderer = renderer; this.scene = scene; this.camera = camera;
     this.quality.onChange = (lvl) => this.applyQuality(lvl);
 
+    this.fx = new FX(scene);
     this.sky = new Sky(scene);
     this.sky.setTime(state.time ?? 0.34);
     progress(0.2, 'Painting the sky…');
@@ -99,6 +101,7 @@ export class Game {
     this.sky.update(dt, this.player.pos);
     this.state.time = this.sky.t;
     this.world.update(dt, this.player.pos);
+    this.fx.update(dt);
 
     // interaction prompt
     if (this.mode === 'play' && !busy) {
