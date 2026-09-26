@@ -53,7 +53,7 @@ function buildHair(b, style, col, look) {
   const dk = shade(col, 0.85);
   const cap = () => {
     b.cbox(0.7, 0.34, 0.66, col, 0, 0.17, -0.02, { r: 0.17 });
-    b.cbox(0.7, 0.46, 0.22, col, 0, -0.02, -0.23, { r: 0.1 });
+    b.sphere(0.37, col, 0, 0.04, -0.1, { sx: 0.97, sy: 0.82, sz: 0.72 });
     for (let i = -1; i <= 1; i++) b.sphere(0.13, col, i * 0.17, 0.25, 0.25, { sy: 0.7, sz: 0.7 });
   };
   switch (style) {
@@ -65,12 +65,13 @@ function buildHair(b, style, col, look) {
     case 'hair_bob':
       cap();
       for (const s of [-1, 1]) b.cbox(0.14, 0.5, 0.5, col, s * 0.34, -0.06, -0.02, { r: 0.07 });
-      b.cbox(0.7, 0.55, 0.2, dk, 0, -0.1, -0.24, { r: 0.1 });
+      b.sphere(0.36, col, 0, -0.1, -0.16, { sx: 1.0, sy: 0.85, sz: 0.55 });
       break;
     case 'hair_long':
       cap();
       for (const s of [-1, 1]) b.cbox(0.15, 0.78, 0.42, col, s * 0.34, -0.2, -0.06, { r: 0.07 });
-      b.cbox(0.72, 0.95, 0.2, dk, 0, -0.3, -0.25, { r: 0.1 });
+      b.sphere(0.36, col, 0, -0.28, -0.2, { sx: 1.0, sy: 1.2, sz: 0.42 });
+      for (let i = -2; i <= 2; i++) b.sphere(0.1, i % 2 ? dk : col, i * 0.12, -0.7 + Math.abs(i) * 0.04, -0.22, { sy: 1.3, sz: 0.7 });
       break;
     case 'hair_ponytail':
       cap();

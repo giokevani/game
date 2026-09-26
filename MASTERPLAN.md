@@ -44,7 +44,7 @@ A pastel seaside town. She moves into a little cottage, adopts a pet from an egg
 | System | Content | Borrowed from |
 |--------|---------|---------------|
 | Town | 5 zones: Home Street, Town Square, Park & Gardens, Beach & Pier, Crystal Cove; plus an unlockable Sky Island | Brookhaven |
-| House building | Paint floor tiles → walls build themselves; tap edges for interior walls, doors, windows; wallpaper & floor styles; 3 plot sizes | Bloxburg |
+| House building | Paint floor tiles → walls build themselves; tap edges for interior walls, doors, windows; wallpaper & floor styles; 4 land sizes | Bloxburg |
 | Furniture | 120+ items in 10 categories (living, bedroom, kitchen, bath, kids, pets, garden, lights, decor, special), most in several colours; sit/sleep/use interactions | Bloxburg / Adopt Me! |
 | Home Rating | 1–5 stars from room count, furniture variety and decor; rewards at each star | Adopt Me! house |
 | Pets | 30 species from 6 eggs (Common → Legendary odds); 5 growth stages (Baby, Kid, Teen, Grown, Sparkle); needs: hungry, thirsty, sleepy, dirty, bored, plus "wants to visit" a place; naming, tricks, accessories | Adopt Me! |
@@ -95,7 +95,7 @@ A13 GPU, 4 GB RAM, 2436×1125 screen.
 ### What we deliberately leave out
 
 - **Multiplayer.** It needs a paid server and moderation, which breaks both the budget and the safety goal. NPC townsfolk fill the town instead.
-- **Multi-storey houses.** One large floor with three plot sizes keeps touch building simple.
+- **Multi-storey houses.** One large floor with four land sizes keeps touch building simple.
 
 ---
 
@@ -137,3 +137,26 @@ Price basis: Claude Opus 5.5 at $4 per million input tokens, $20 per million out
 1. You enable GitHub Pages once: repo **Settings → Pages → Source: GitHub Actions** (one click; I can't change repo settings from here).
 2. Link: `https://giokevani.github.io/game/`
 3. On her iPhone: open the link in Safari → Share → **Add to Home Screen**. The game then opens full-screen like an app, works offline, and Safari won't clear her save.
+
+---
+
+## 7. Status at the end of the build session
+
+| Item | Plan | Result |
+|------|------|--------|
+| Zones | 5 + Sky Island | Done (6) |
+| Furniture | 120+ | 116 items, 12 colours each |
+| Pets | 30 species, 6 eggs, 5 stages | Done |
+| Jobs | 5 mini-games with levels | Done (bakery, florist, fishing, garden, delivery) |
+| Story | ~30 quests, 5 chapters | 30 quests, 14 townsfolk |
+| Collections | 40 shells, 16 fish, 10 plants, 60 stickers | Done |
+| Avatar, rides, weather, music | As planned | Done |
+| Unit tests | Logic, catalogues, reachability | 24 tests, all passing |
+| End-to-end tests | Boot, build, pets, jobs, save/reload... | 21 tests in Chromium with iPhone 11 Pro emulation, all passing |
+| Pacing | 9–11 h to finish | Simulation: 9.9–10.9 h to finish the story (3 seeds); every furniture item 11.6–14.6 h |
+| Performance | < 150 draw calls, < 250k triangles | Town Square: 142 draw calls, about 466k triangles including the shadow pass. That's over the triangle target. Graphics drop to Medium or Low automatically if frame rate falls below 40 fps. Only the real-phone check can confirm how smooth it feels |
+| Real iPhone test | Your 10-minute check | Still open; see README |
+
+**Found and fixed by the tests:** a backup restore was overwritten by the auto-save during reload; after the balloon ride or fast travel to Sky Island, the player landed on the ground far below the island.
+
+**Budget:** I can't read the credit meter from this session. My rough estimate for this whole session is $25–35 of the $100, based on Opus 5.5 token prices. That leaves most of the credit for fixes after she has played. Check the real figure under claude.ai → Settings → Usage.
