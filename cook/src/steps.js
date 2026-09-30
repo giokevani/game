@@ -17,7 +17,7 @@ const TAU = Math.PI * 2;
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const tintMat = (hex) => { const m = MD.FOOD.clone(); m.color.set(hex); m.userData.own = true; return m; };
 
-function dashedLine(len, color = '#ff4f8f') {
+function dashedLine(len, color = '#5a2a6a') {
   const tex = new THREE.CanvasTexture((() => {
     const c = document.createElement('canvas'); c.width = 16; c.height = 256;
     const x = c.getContext('2d');
@@ -25,7 +25,7 @@ function dashedLine(len, color = '#ff4f8f') {
     return c;
   })());
   tex.colorSpace = THREE.SRGBColorSpace;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.014, len), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.018, len), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false }));
   m.rotation.x = -Math.PI / 2;
   m.renderOrder = 20;
   m.userData.own = true;
