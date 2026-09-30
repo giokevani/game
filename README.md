@@ -1,4 +1,15 @@
-# 🌸 Blossom Bay
+# 🌸 Blossom Bay + 🧁 Blossom Kitchen
+
+Two games in one repository:
+
+| Game | Link | What it is |
+|---|---|---|
+| 🌸 Blossom Bay | https://giokevani.github.io/game/ | Build and decorate a house, raise pets, explore a seaside town |
+| 🧁 Blossom Kitchen | https://giokevani.github.io/game/cook/ | Cook dishes step by step, serve guests, earn money, buy dream houses, learn English |
+
+Each game has its own save, so playing one never changes the other.
+
+## 🌸 Blossom Bay
 
 A cozy 3D life-sim for iPhone Safari: build and decorate your own house, hatch and raise pets, take jobs around a seaside town, and follow a 30-task story to the Blossom Festival. It's inspired by the Roblox games *Brookhaven RP*, *Adopt Me!* and *Welcome to Bloxburg*, but every model, sound and line of text is original and made in code. See [MASTERPLAN.md](MASTERPLAN.md) for the research and design.
 
@@ -46,6 +57,22 @@ Single player only. No chat, no ads, no in-app purchases, no accounts, and no da
 
 **Play time:** a simulation of a typical player (`npm run sim`) finishes the story in **9.9–10.9 hours** across random seeds. Owning every piece of furniture takes about 12–15 hours, and collecting all 30 pets takes longer still. These figures come from a model, not from watching a real child play; see the assumptions at the top of `test/sim/economy.mjs`.
 
+## 🧁 Blossom Kitchen
+
+Cook in five restaurants, get paid by your guests and buy ten Dream Homes. All tasks are in **English** (with 🔊 read-aloud) and there's a small **Russian help line** under each one, in Cyrillic or Latin letters. See [COOKING_PLAN.md](COOKING_PLAN.md) for the research and design.
+
+| | |
+|---|---|
+| Cooking | 17 recipes, each 3–7 hands-on steps: add, stir, chop (swipe along the line), fry/grill/bake/boil (stop in the green zone, flip), pour (stop at the line), spread (rub), put toppings (tap), stack a burger or cake, roll, slice |
+| Guests | Guests queue at the counter and say their order in a full English sentence, e.g. *"Hi! Can I have a burger with tomato and no cheese, please?"* Better cooking earns tips |
+| Progress | 5 restaurants (Pancake Café → Burger Diner → Pizza Place → Sushi Bar → Sweet Bakery) × 8 levels, 1–3 stars each, and an endless **Busy Day** for each restaurant |
+| Dream Homes | 10 houses from a Tiny Studio (150 🪙) to a Sky Palace (20,000 🪙). Each house you own adds +5% to your earnings |
+| English | 97 words with pictures in the 📖 Word Book, tap to hear. A 3-question picture quiz after each level pays bonus coins |
+
+**Play time:** the pacing simulation (`npm run sim:cook`) buys every house after **7.2–8.4 hours** across three player skill levels. All five restaurants are open after about 2.3 hours. This is a model, not a measurement of a real child playing.
+
+**First start:** she chooses Russian help in Cyrillic or Latin letters, then Chef Lily explains the game (English with a Russian line) and the first café level starts. Each kind of step shows a one-time Russian tip on how to do it.
+
 ## For developers
 ```bash
 npm install
@@ -54,5 +81,8 @@ npm test           # unit tests (logic, catalogues, reachability)
 npm run build
 npm run test:e2e   # end-to-end tests in headless Chromium (iPhone 11 Pro emulation)
 npm run sim        # economy / pacing simulation
+npm run test:e2e:cook  # Blossom Kitchen end-to-end test
+npm run sim:cook       # Blossom Kitchen pacing simulation
 ```
+Blossom Kitchen lives in `cook/` and reuses the Blossom Bay engine (`src/engine`, avatars, UI helpers). It is built as a second Vite page (`cook/index.html`).
 Tech: Three.js (WebGL 2) + Vite. Everything is procedural: no image, model or sound files except the Fredoka font and the app icon.

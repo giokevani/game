@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Blossom Bay - a cozy 3D life-sim for iPhone Safari",
+  "description": "Blossom Bay and Blossom Kitchen - cozy 3D games for iPhone Safari",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host --port 4173",
     "test": "node --test test/unit/*.test.mjs",
     "test:e2e": "node test/e2e/run.mjs",
-    "sim": "node test/sim/economy.mjs"
+    "sim": "node test/sim/economy.mjs",
+    "test:e2e:cook": "node test/e2e/cook.mjs",
+    "sim:cook": "node test/sim/cook-economy.mjs"
   },
   "dependencies": {
     "@fontsource/fredoka": "^5.3.0",
