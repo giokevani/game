@@ -198,14 +198,3 @@ export function buildRestaurant(R) {
   g.add(mesh(k, M.std, { ao: 0, cast: false }));
   return g;
 }
-
-// sky-blue gradient behind the windows (big backdrop)
-export function backdrop() {
-  const tex = canvasTex(4, 256, (x, w, h) => {
-    const g = x.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, '#8fd0ff'); g.addColorStop(0.6, '#d6f0ff'); g.addColorStop(1, '#fff0f6');
-    x.fillStyle = g; x.fillRect(0, 0, w, h);
-  });
-  const m = new THREE.Mesh(new THREE.SphereGeometry(60, 16, 12), new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false, toneMapped: false }));
-  return m;
-}

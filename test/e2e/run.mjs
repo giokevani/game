@@ -14,7 +14,7 @@ const clickDialogs = async (n = 6) => { for (let i = 0; i < n; i++) { const had 
 function assert(c, msg) { if (!c) throw new Error(msg); }
 // headless Chromium renders in software (few fps) and the game clamps each frame to 50 ms,
 // so waits are measured in game time, not wall time
-const waitGame = async (sec) => { const t0 = await ev(() => window.__bb.time); await page.waitForFunction((t) => window.__bb.time >= t, t0 + sec, { timeout: 120000, polling: 50 }); };
+const waitGame = async (sec) => { const t0 = await ev(() => window.__bb.time); await page.waitForFunction((t) => window.__bb.time >= t, t0 + sec, { timeout: 300000, polling: 50 }); };
 const holdKey = async (code, sec) => { await page.keyboard.down(code); await waitGame(sec); await page.keyboard.up(code); };
 
 async function test(name, fn) {

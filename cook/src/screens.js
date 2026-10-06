@@ -1,14 +1,11 @@
-// Menus and screens: first start, title, restaurant map, level cards, order
-// card, results + word quiz, Dream Homes, Word Book, settings.
+// Café menus and screens: first visit, restaurant picker, level cards, order
+// card, results + word quiz, Word Book, help settings.
 import * as THREE from 'three';
-import { h, modal, click, confirmBox, say, celebrate, fmt, root, closeAllModals, tabs } from '../../src/ui/ui.js';
-import { RESTAURANTS, RESTAURANT, LEVELS_PER, HOUSES, WORDS, WORD, levelInfo } from './data.js';
-import { totalStars, restaurantStars, restaurantOpen, levelOpen, busyOpen, levelKey, canBuy, buyHouse, nextHouse, bonus, newState } from './state.js';
+import { h, modal, click, say, celebrate, root, tabs } from '../../src/ui/ui.js';
+import { RESTAURANTS, RESTAURANT, LEVELS_PER, WORDS, WORD } from './data.js';
+import { totalStars, restaurantStars, restaurantOpen, levelOpen, busyOpen, levelKey } from './state.js';
 import { orderSentence } from './text.js';
 import { ru, speak, primeSpeech, canSpeak } from './i18n.js';
-import { buildHouse, setLocked } from './houses.js';
-import { disposeTree } from './steps.js';
-import { backdrop } from './restaurant.js';
 
 const FACES = ['🙂', '😊', '👧', '🧒', '👩', '👦', '🧑', '👱‍♀️', '👩‍🦰', '🧑‍🦱'];
 const sayBtn = (text) => h('button', { class: 'say-btn small', onclick: (e) => { e.stopPropagation(); speak(text, true); } }, '🔊');
@@ -34,7 +31,7 @@ export function chooseScript(g) {
         h('div', { class: 'row center' },
           h('button', { class: 'btn big', onclick: () => pickIt('cyr') }, 'Русские буквы', h('small', {}, 'Привет!')),
           h('button', { class: 'btn big sky', onclick: () => pickIt('lat') }, 'Latinskie bukvy', h('small', {}, 'Privet!'))),
-        h('p', { class: 'muted small' }, 'You can change this later in ⚙️ Settings.')));
+        h('p', { class: 'muted small' }, 'You can change this later in the café: ⚙️ Help.')));
     root().appendChild(el);
   });
 }
@@ -44,7 +41,7 @@ export async function intro(g) {
   const lines = [
     ["Hello! I'm Chef Lily. Welcome to your café!", 'Привет! Я шеф Лили. Добро пожаловать в твоё кафе!'],
     ['Cook yummy food for your guests.', 'Готовь вкусную еду для гостей. Они платят монетками 🪙.'],
-    ['Save money and buy your dream house!', 'Копи деньги и покупай дома мечты! Каждый дом даёт +5% к заработку.'],
+    ['Then go outside and build your dream house!', 'Потом выходи на улицу и строй дом своей мечты! Кнопка 🔨 Build.'],
     ['Everything is in English. Tap 🔊 to listen!', 'Все задания на английском, а внизу подсказка по-русски. Нажми 🔊, чтобы послушать.'],
   ];
   for (const [en, r] of lines) {
@@ -55,33 +52,10 @@ export async function intro(g) {
   g.changed();
 }
 
-// ---------- title ----------
-export function title(g) {
-  closeAllModals();
-  document.querySelector('.screen.title')?.remove();
-  g.hud.levelMode(false);
-  g.setView('title');
-  const s = g.state;
-  const nh = nextHouse(s);
-  const el = h('div', { class: 'screen title' },
-    h('div', { class: 'title-card' },
-      h('div', { class: 'logo' }, h('span', { class: 'logo-em' }, '🧁'), h('div', {}, h('h1', {}, 'Blossom Kitchen'), h('div', { class: 'tag' }, 'Cook · Earn · Dream Homes'))),
-      nh ? h('div', { class: 'goal' },
-        h('div', {}, '🏠 Next dream home: ', h('b', {}, nh.en), ` · ${fmt(nh.price)} 🪙`),
-        h('div', { class: 'progress' }, h('i', { style: { width: Math.min(100, (s.coins / nh.price) * 100) + '%' } })))
-        : h('div', { class: 'goal' }, '👑 You own every dream home! Amazing!'),
-      h('div', { class: 'title-btns' },
-        h('button', { class: 'btn big', onclick: () => { click(); primeSpeech(); el.remove(); map(g); } }, '▶ Play'),
-        h('button', { class: 'btn big sun', onclick: () => { click(); el.remove(); homes(g); } }, '🏠 Dream Homes'),
-        h('button', { class: 'btn mint', onclick: () => { click(); wordBook(g); } }, '📖 Words'),
-        h('button', { class: 'btn lav', onclick: () => { click(); settings(g); } }, '⚙️ Settings'))));
-  root().appendChild(el);
-}
-
 // ---------- restaurants + levels ----------
 export function map(g) {
   const s = g.state;
-  modal('🍽️ Restaurants', (b, close) => {
+  modal('🍽️ Blossom Kitchen: pick a menu', (b, close) => {
     b.appendChild(h('div', { class: 'muted' }, `⭐ ${totalStars(s)} stars · earn ⭐ to open new restaurants`));
     const grid = h('div', { class: 'rest-grid' });
     for (const R of RESTAURANTS) {
@@ -97,7 +71,11 @@ export function map(g) {
       h('div', { class: 'r-st' }, open ? `⭐ ${st}/${LEVELS_PER * 3}` : `Need ⭐ ${R.stars}`)));
     }
     b.appendChild(grid);
-    b.appendChild(h('div', { class: 'row', style: { marginTop: '10px' } }, h('button', { class: 'btn ghost small', onclick: () => { click(); close(); title(g); } }, '🏠 Menu')));
+    b.appendChild(h('div', { class: 'row', style: { marginTop: '10px' } },
+      h('button', { class: 'btn mint small', onclick: () => { click(); wordBook(g); } }, '📖 Words'),
+      h('button', { class: 'btn lav small', onclick: () => { click(); settings(g); } }, '⚙️ Help'),
+      h('div', { class: 'spacer' }),
+      h('button', { class: 'btn ghost', onclick: () => { click(); close(); g.leave(); } }, '🚪 Leave café')));
   }, { noClose: true });
 }
 
@@ -126,7 +104,7 @@ export function levels(g, rid) {
     b.appendChild(grid);
     b.appendChild(h('div', { class: 'row', style: { marginTop: '10px' } },
       h('button', { class: 'btn ghost small', onclick: () => { click(); close(); map(g); } }, '◀ Restaurants'),
-      h('button', { class: 'btn ghost small', onclick: () => { click(); close(); title(g); } }, '🏠 Menu')));
+      h('button', { class: 'btn ghost small', onclick: () => { click(); close(); g.leave(); } }, '🚪 Leave café')));
   }, { noClose: true });
 }
 
@@ -169,7 +147,8 @@ export function pauseMenu(g) {
       h('button', { class: 'btn big mint', onclick: () => { click(); close(); } }, '▶ Continue'),
       h('button', { class: 'btn', onclick: () => { click(); const lv = g.level; close(); if (lv) g.quitLevel(), g.playLevel(lv.rid, lv.L); } }, '🔄 Restart level'),
       h('button', { class: 'btn lav', onclick: () => { click(); settings(g); } }, '⚙️ Settings'),
-      h('button', { class: 'btn ghost', onclick: () => { click(); close(); g.quitLevel(); title(g); } }, '🏠 Main menu')));
+      h('button', { class: 'btn', onclick: () => { click(); const lv = g.level; close(); g.quitLevel(); levels(g, lv?.rid || g.rid); } }, '📋 Levels'),
+      h('button', { class: 'btn ghost', onclick: () => { click(); close(); g.quitLevel(); g.leave(); } }, '🚪 Leave café')));
   }, { narrow: true, onClose: () => { g.paused = false; } });
 }
 
@@ -198,16 +177,14 @@ export function results(g, lv, result) {
         if (words.length) b.appendChild(h('div', { class: 'words-row' }, ...words.map((w) => h('button', { class: 'wchip', onclick: () => speak(WORD[w].en, true) }, WORD[w].emoji, ' ', WORD[w].en))));
         const nextL = lv.L < LEVELS_PER && result.stars >= 1 ? lv.L + 1 : null;
         b.appendChild(h('div', { class: 'row', style: { justifyContent: 'center', marginTop: '10px' } },
-          quizDone ? null : h('button', { class: 'btn big sun', onclick: () => { click(); quiz(g, lv, () => { quizDone = true; draw(); }); } }, '✏️ Word Quiz +30🪙'),
-          h('button', { class: 'btn ghost', onclick: () => { click(); close(); g.quitLevel(); title(g); } }, '🏠 Menu'),
+          quizDone ? null : h('button', { class: 'btn big sun', onclick: () => { click(); quiz(g, lv, () => { quizDone = true; draw(); }); } }, '✏️ Word Quiz +60🪙'),
+          h('button', { class: 'btn ghost', onclick: () => { click(); close(); g.quitLevel(); g.leave(); } }, '🚪 Leave'),
           h('button', { class: 'btn', onclick: () => { click(); close(); g.quitLevel(); levels(g, lv.rid); } }, '📋 Levels'),
           nextL ? h('button', { class: 'btn mint big', onclick: () => { click(); close(); g.playLevel(lv.rid, nextL); } }, 'Next ▶')
             : !result.stars && !lv.busy ? h('button', { class: 'btn mint big', onclick: () => { click(); close(); g.playLevel(lv.rid, lv.L); } }, '🔄 Again') : null));
       };
       draw();
       if (result.newRestaurant) setTimeout(() => { celebrate(`${result.newRestaurant.emoji} New restaurant!`, ru(result.newRestaurant.ru + ' открыта!'), 2600); g.audio.play('fanfare'); }, 900);
-      const nh = nextHouse(s);
-      if (nh && s.coins >= nh.price) setTimeout(() => celebrate('🏠 You can buy a new home!', ru('Можно купить новый дом!'), 2600), result.newRestaurant ? 3600 : 900);
     }, { noClose: true, onClose: res });
     void m;
   });
@@ -225,8 +202,8 @@ export function quiz(g, lv, onDone) {
     const ask = () => {
       b.innerHTML = '';
       if (qi >= words.length) {
-        const coins = right * 10;
-        s.coins += coins; s.earned += coins; s.stats.quiz += right;
+        const coins = right * 20;
+        s.coins += coins; s.stats.quiz += right;
         g.changed(); g.save();
         g.audio.play(right === 3 ? 'fanfare' : 'coin');
         b.appendChild(h('div', { class: 'big-line center' }, `${right}/3 right! +${coins} 🪙`));
@@ -269,93 +246,6 @@ export function quiz(g, lv, onDone) {
 }
 const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
 
-// ---------- Dream Homes ----------
-export function homes(g) {
-  closeAllModals();
-  const s = g.state;
-  let i = Math.max(0, HOUSES.findIndex((x) => !s.houses.includes(x.id)));
-  if (s.home) i = HOUSES.findIndex((x) => x.id === s.home);
-  if (i < 0) i = 0;
-  // showroom scene
-  const show = new THREE.Group();
-  const sky = new THREE.Color('#bfe6ff');
-  const prevBg = g.scene.background;
-  g.scene.background = sky;
-  if (g.world) g.world.visible = false;
-  show.add(backdrop());
-  g.scene.add(show);
-  const prevView = { pos: g.camera.position.clone(), look: g.cam.curLook.clone() };
-  const portrait = window.innerWidth < window.innerHeight;
-  g.view = 'homes';
-  g.cam.t = 1;
-  g.camera.position.set(0, portrait ? 4.2 : 3.4, portrait ? 14 : 10.5);
-  g.cam.curLook.set(0, portrait ? 0.4 : 0.1, 0);
-  g.hud.tl.classList.add('hide');
-  let house = null, spin = 0;
-  const off = () => { g.kitchen.updaters.delete(rot); };
-  const rot = (dt) => { spin += dt * 0.35; if (house) house.rotation.y = Math.sin(spin) * 0.6 + 0.3; };
-  g.kitchen.every(rot, false);
-  const name = h('div', { class: 'h-name' });
-  const nameRu = h('div', { class: 'h-ru' });
-  const info = h('div', { class: 'h-info' });
-  const act = h('div', { class: 'h-act' });
-  const count = h('div', { class: 'pill' });
-  const draw = () => {
-    const H = HOUSES[i];
-    if (house) { show.remove(house); disposeTree(house); }
-    house = buildHouse(H.id);
-    const owned = s.houses.includes(H.id);
-    setLocked(house, false);
-    show.add(house);
-    name.textContent = `${H.en}`;
-    nameRu.textContent = s.settings.help ? ru(H.ru) : '';
-    count.textContent = `🏠 ${s.houses.length}/10 · money bonus +${Math.round((bonus(s) - 1) * 100)}%`;
-    info.innerHTML = '';
-    act.innerHTML = '';
-    if (owned) {
-      info.appendChild(h('div', { class: 'owned' }, s.home === H.id ? '💖 You live here!' : '✅ Yours!'));
-      if (s.home !== H.id) act.appendChild(h('button', { class: 'btn mint', onclick: () => { click(); s.home = H.id; g.changed(); g.save(); g.audio.play('sparkle'); draw(); } }, '🧳 Move in'));
-    } else {
-      const can = canBuy(s, H.id);
-      info.appendChild(h('div', { class: 'price' }, `${fmt(H.price)} 🪙`));
-      if (!can) info.appendChild(h('div', { class: 'h-need' }, `You have ${fmt(s.coins)} 🪙 · need ${fmt(H.price - s.coins)} more`));
-      act.appendChild(h('button', { class: 'btn big sun' + (can ? '' : ' disabled'), onclick: () => {
-        click();
-        if (!buyHouse(s, H.id)) { g.audio.play('no'); return; }
-        g.changed(); g.save();
-        g.audio.play('fanfare');
-        g.fx.burst(new THREE.Vector3(0, 2.5, 0), 'confetti', { n: 80, scale: 2.4 });
-        g.fx.burst(new THREE.Vector3(0, 2, 0), 'stars', { n: 16, scale: 2 });
-        celebrate('🏠 New home!', ru('Новый дом! Теперь ты зарабатываешь больше.'), 2600);
-        speak('Congratulations! Welcome to your new home!');
-        draw();
-      } }, `Buy 🔑`));
-    }
-  };
-  const el = h('div', { class: 'screen homes' },
-    h('div', { class: 'h-top' }, h('button', { class: 'btn ghost', onclick: () => { click(); leave(); } }, '◀ Back'), count, h('div', { class: 'pill coins' }, h('span', { class: 'ico' }, '🪙'), fmt(s.coins))),
-    h('button', { class: 'arrow l', onclick: () => { click(); i = (i + HOUSES.length - 1) % HOUSES.length; draw(); } }, '◀'),
-    h('button', { class: 'arrow r', onclick: () => { click(); i = (i + 1) % HOUSES.length; draw(); } }, '▶'),
-    h('div', { class: 'h-card' }, name, nameRu, info, act));
-  const leave = () => {
-    off();
-    disposeTree(show);
-    g.scene.remove(show);
-    g.scene.background = prevBg;
-    if (g.world) g.world.visible = true;
-    g.camera.position.copy(prevView.pos);
-    g.cam.curLook.copy(prevView.look);
-    el.remove();
-    g.hud.tl.classList.remove('hide');
-    title(g);
-  };
-  root().appendChild(el);
-  draw();
-  // coins pill live update
-  const coinPill = el.querySelector('.h-top .coins');
-  const upd = setInterval(() => { if (!el.isConnected) return clearInterval(upd); coinPill.lastChild.textContent = fmt(s.coins); }, 400);
-}
-
 // ---------- Word Book ----------
 export function wordBook(g) {
   const s = g.state;
@@ -392,7 +282,7 @@ export function wordBook(g) {
 export function settings(g) {
   const s = g.state;
   const st = s.settings;
-  modal('⚙️ Settings', (b) => {
+  modal('⚙️ Help & voice', (b) => {
     const row = (label, sub, ctl) => h('div', { class: 'toggle' }, h('div', {}, label, sub ? h('div', { class: 'muted small' }, sub) : null), ctl);
     const sw = (key, onChange) => {
       const btn = h('button', { class: 'sw-btn' + (st[key] ? ' on' : ''), onclick: () => {
@@ -416,18 +306,6 @@ export function settings(g) {
       row('Russian letters', ru('Буквы для подсказок'), seg('script', [['cyr', 'Кириллица'], ['lat', 'Latinica']])),
       row('Read English aloud', canSpeak() ? 'The phone says every task' : 'Not available on this device', sw('voice')),
       row('Voice speed', null, seg('rate', [[0.7, '🐢 Slow'], [0.85, 'Normal'], [1, '🐇 Fast']])),
-      row('Music', null, sw('music', (v) => g.audio.setMusic(v))),
-      row('Sounds', null, sw('sfx', (v) => g.audio.setSfx(v))),
-      h('div', { class: 'row', style: { marginTop: '10px' } },
-        h('button', { class: 'btn danger small', onclick: async () => {
-          click();
-          if (await confirmBox('Start over?', 'All money, stars and houses will be deleted.', 'Delete', 'Cancel')) {
-            g.noSave = true;
-            Object.assign(g.state, newState());
-            localStorage.removeItem('blossomkitchen-v1');
-            location.reload();
-          }
-        } }, '🗑️ Start over')),
-      h('p', { class: 'muted small' }, 'Blossom Kitchen · made with love. No ads, no chat, nothing leaves this phone.'));
+      h('p', { class: 'muted small' }, 'Music and sounds: ⚙️ Menu in town.'));
   }, { narrow: true });
 }

@@ -40,6 +40,7 @@ export const BUILDINGS = [
   { id: 'florist', kind: 'shop', name: 'Petal Shop', x: 57, z: -34, w: 11, d: 10, face: -Math.PI / 2, wall: '#e9e1ff', roof: '#9c7fe0', awning: ['#ffffff', '#b59cf5'], icon: '💐' },
   { id: 'postoffice', kind: 'shop', name: 'Bay Post', x: 57, z: 8, w: 11, d: 10, face: -Math.PI / 2, wall: '#d6ecff', roof: '#5a8fd6', awning: ['#ffffff', '#f5c451'], icon: '📮' },
   { id: 'cars', kind: 'shop', name: 'Zoom Rides', x: -57, z: 6, w: 12, d: 11, face: Math.PI / 2, wall: '#fff3b8', roof: '#f29b38', awning: ['#ffffff', '#f7b955'], icon: '🛵' },
+  { id: 'cafe', kind: 'shop', name: 'Blossom Kitchen', x: -92, z: 7, w: 14, d: 11, face: 0, wall: '#ffe0ec', roof: '#ff8fb5', awning: ['#ffffff', '#ff8fb5'], icon: '🍳' },
   { id: 'icecream', kind: 'stand', name: 'Ice Cream', x: -10, z: 39, w: 5, d: 4, face: 0, wall: '#ffe0f0', roof: '#7fd6e8', icon: '🍦' },
   { id: 'fishing', kind: 'stand', name: 'Fishing', x: 22, z: 40, w: 6, d: 5, face: 0, wall: '#cfe9ff', roof: '#4d8fd1', icon: '🎣' },
   // neighbour houses

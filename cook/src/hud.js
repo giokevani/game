@@ -1,4 +1,4 @@
-// In-game overlay: money, level info, the English prompt with Russian help,
+// Café overlay: money, level info, the English prompt with Russian help,
 // the order ticket, step dots and the one-time how-to tips.
 import { h, fmt, click } from '../../src/ui/ui.js';
 import { WORD } from './data.js';
@@ -30,9 +30,15 @@ export class Hud {
     this.bottom = h('div', { class: 'cook-bottom' });
     this.tip = h('div', { class: 'tip hide' });
     this.bubbles = h('div', { class: 'bubbles' });
-    root.append(this.bubbles, this.tl, this.tr, this.prompt, this.ticket, this.order, this.bottom, this.tip);
+    this.box = h('div', { class: 'cafe-ui hide' }, this.bubbles, this.tl, this.tr, this.prompt, this.ticket, this.order, this.bottom, this.tip);
+    root.append(this.box);
     game.kitchen.bottom = this.bottom;
     this.lastCoins = null;
+  }
+
+  show(on) {
+    this.box.classList.toggle('hide', !on);
+    if (on) this.update(this.g.state);
   }
 
   update(s) {

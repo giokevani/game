@@ -1,9 +1,11 @@
-// Blossom Kitchen logic tests: data integrity, texts, economy, progress, save.
+// Blossom Kitchen café logic tests: data integrity, texts, economy, progress,
+// and how café progress lives inside the Blossom Bay save.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WORDS, WORD, RECIPES, RECIPE, RESTAURANTS, HOUSES, CHOP, LEVELS_PER, levelInfo, makeOrder, recipeWords, starsFor } from '../../cook/src/data.js';
+import { WORDS, WORD, RECIPES, RECIPE, RESTAURANTS, CHOP, LEVELS_PER, levelInfo, makeOrder, recipeWords, starsFor } from '../../cook/src/data.js';
 import { stepPrompt, orderSentence, dishPhrase, translit, HOWTO, withEn, withRu } from '../../cook/src/text.js';
-import { newState, upgrade, loadState, saveState, dishPay, finishLevel, levelOpen, restaurantOpen, busyOpen, buyHouse, canBuy, nextHouse, totalStars, levelKey, seeWords } from '../../cook/src/state.js';
+import { cafeView, importKitchenSave, dishPay, dishXP, bbPrice, finishLevel, levelOpen, restaurantOpen, busyOpen, bestOpen, totalStars, levelKey, seeWords } from '../../cook/src/state.js';
+import { newState as bbState, migrate } from '../../src/core/state.js';
 import { rng } from '../../src/engine/builder.js';
 
 const STEP_TYPES = ['add', 'stir', 'chop', 'cook', 'pour', 'spread', 'place', 'stack', 'roll', 'slice'];
@@ -124,38 +126,43 @@ test('stars from quality', () => {
   assert.equal(starsFor(0.2), 0);
 });
 
-test('money: better cooking pays more, houses add +5% each', () => {
-  const s = newState();
-  const perfect = dishPay('pizza', 1, s), ok = dishPay('pizza', 0.5, s);
+test('money: better cooking pays more, prices fit the Blossom Bay economy', () => {
+  const perfect = dishPay('pizza', 1), ok = dishPay('pizza', 0.5);
   assert.ok(perfect.total > ok.total);
   assert.ok(perfect.tip > 0 && ok.tip === 0);
-  s.houses = ['studio', 'cottage'];
-  assert.ok(dishPay('pizza', 1, s).base > perfect.base);
-  assert.equal(dishPay('pizza', 1, s).base, Math.round(RECIPE.pizza.price * 1.1));
+  // every dish pays between 45 and 150 coins at good quality (a cake job pays ~30-55)
+  for (const r of RECIPES) { const p = dishPay(r.id, 0.85).total; assert.ok(p >= 45 && p <= 150, `${r.id} pays ${p}`); }
+  assert.ok(bbPrice('cake') > bbPrice('pancakes'), 'later restaurants pay more');
+  assert.ok(dishXP('cake', 1) > dishXP('pancakes', 0.5));
 });
 
 test('progress: levels, restaurants and Busy Day unlock in order', () => {
-  const s = newState();
+  const bb = bbState();
+  const s = cafeView(bb);
   assert.ok(levelOpen(s, 'cafe', 1));
+  assert.equal(bestOpen(s), 'cafe');
   assert.ok(!levelOpen(s, 'cafe', 2));
   assert.ok(!restaurantOpen(s, 'diner'));
-  const r = finishLevel(s, 'cafe', 1, [1, 1, 0.9, 1], 80);
+  const coins0 = bb.player.coins;
+  const r = finishLevel(s, 'cafe', 1, [1, 1, 0.9, 1]);
   assert.equal(r.stars, 3);
   assert.ok(r.bonus > 0);
+  assert.equal(bb.player.coins, coins0 + r.bonus, 'level bonus goes into the Blossom Bay purse');
   assert.ok(levelOpen(s, 'cafe', 2));
   // replaying with fewer stars keeps the best
-  finishLevel(s, 'cafe', 1, [0.5, 0.5], 20);
+  finishLevel(s, 'cafe', 1, [0.5, 0.5]);
   assert.equal(s.stars[levelKey('cafe', 1)], 3);
-  for (let L = 2; L <= LEVELS_PER; L++) finishLevel(s, 'cafe', L, [0.8, 0.8], 50);
+  for (let L = 2; L <= LEVELS_PER; L++) finishLevel(s, 'cafe', L, [0.8, 0.8]);
   assert.ok(busyOpen(s, 'cafe'));
   assert.ok(restaurantOpen(s, 'diner'), `stars ${totalStars(s)}`);
+  assert.equal(bestOpen(s), 'pizza', '17 stars also open the Pizza Place');
   // no level bonus for Busy Day, but best is recorded
-  const b = finishLevel(s, 'cafe', LEVELS_PER + 1, [1, 1, 1], 100);
+  const b = finishLevel(s, 'cafe', LEVELS_PER + 1, [1, 1, 1]);
   assert.equal(b.bonus, 0);
   assert.equal(s.busyBest.cafe, 3);
   // 0 stars don't open the next level
-  const t = newState();
-  finishLevel(t, 'cafe', 1, [0.2, 0.1], 5);
+  const t = cafeView(bbState());
+  finishLevel(t, 'cafe', 1, [0.2, 0.1]);
   assert.ok(!levelOpen(t, 'cafe', 2));
 });
 
@@ -167,38 +174,41 @@ test('every restaurant can be unlocked with the stars available before it', () =
   }
 });
 
-test('Dream Homes: 10 houses, rising prices, buying works', () => {
-  assert.equal(HOUSES.length, 10);
-  for (let i = 1; i < HOUSES.length; i++) assert.ok(HOUSES[i].price > HOUSES[i - 1].price);
-  const s = newState();
-  assert.ok(!canBuy(s, 'studio'));
-  s.coins = 500;
-  assert.ok(buyHouse(s, 'studio'));
-  assert.equal(s.coins, 350);
-  assert.equal(s.home, 'studio');
-  assert.ok(!buyHouse(s, 'studio'), 'cannot buy twice');
-  assert.equal(nextHouse(s).id, 'cottage');
+test('café progress is stored in the Blossom Bay save; coins are Blossom Bay coins', () => {
+  const bb = bbState();
+  const s = cafeView(bb);
+  const c0 = bb.player.coins;
+  s.coins += 60;
+  assert.equal(bb.player.coins, c0 + 60);
+  assert.equal(bb.stats.coinsEarned, 60);
+  assert.equal(s.stats.earned, 60);
+  s.stars['cafe-1'] = 2;
+  seeWords(s, ['tomato', 'tomato']);
+  const json = JSON.stringify(bb);
+  assert.ok(!JSON.parse(json).cafe.coins, 'coins are not stored twice');
+  const back = cafeView(migrate(JSON.parse(json)));
+  assert.equal(back.stars['cafe-1'], 2);
+  assert.equal(back.words.tomato, 2);
+  assert.equal(back.coins, c0 + 60);
+  assert.equal(back.settings.voice, true);
 });
 
-test('save: round trip, upgrade of old/partial saves, broken data', () => {
-  const mem = new Map();
-  const store = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
-  assert.equal(loadState(store).fresh, true);
-  const s = newState();
-  s.coins = 123; s.houses = ['studio', 'nope']; s.home = 'nope';
-  seeWords(s, ['tomato', 'tomato', 'egg']);
-  saveState(s, store);
-  const l = loadState(store);
-  assert.equal(l.fresh, false);
-  assert.equal(l.state.coins, 123);
-  assert.deepEqual(l.state.houses, ['studio']);
-  assert.equal(l.state.home, 'studio');
-  assert.equal(l.state.words.tomato, 2);
-  const up = upgrade({ coins: 5, settings: { script: 'lat' } });
-  assert.equal(up.settings.voice, true);
-  assert.equal(up.settings.script, 'lat');
-  mem.set('blossomkitchen-v1', '{broken');
-  assert.equal(loadState(store).fresh, true);
+test('the old stand-alone Blossom Kitchen save moves in once', () => {
+  const bb = bbState();
+  const c0 = bb.player.coins;
+  const old = { coins: 120, houses: ['studio'], stars: { 'cafe-1': 3, 'cafe-2': 9 }, words: { egg: 2 }, tips: ['chop'], scriptChosen: true, intro: true, settings: { script: 'lat', voice: false } };
+  const r = importKitchenSave(bb, old);
+  assert.equal(r.coins, 120 + 150, 'money plus the price of her stand-alone house');
+  assert.equal(bb.player.coins, c0 + 270);
+  const s = cafeView(bb);
+  assert.equal(s.stars['cafe-1'], 3);
+  assert.equal(s.stars['cafe-2'], 3, 'stars are capped at 3');
+  assert.equal(s.settings.script, 'lat');
+  assert.equal(s.settings.voice, false);
+  assert.ok(s.intro && s.scriptChosen && s.imported);
+  assert.equal(importKitchenSave(bb, old).coins, 0, 'only once');
+  assert.equal(bb.player.coins, c0 + 270);
+  assert.equal(importKitchenSave(bbState(), null).coins, 0);
 });
 
 test('Word Book: every recipe teaches its words', () => {

@@ -40,7 +40,17 @@ These are secondary sources (fan wikis, review sites). I used them only to confi
 | Recipes | 17 | 17, with 1–8 variants each (for example a burger with or without cheese and one of three vegetables) |
 | Step types | 10 | 10: add, stir, chop, cook (with flip), pour, spread, place, stack, roll, slice |
 | Restaurants × levels | 5 × 8 + Busy Day | Done. Unlock at 0 / 6 / 15 / 26 / 38 stars |
-| Dream Homes | 10, +5% each | Done: Tiny Studio 150 → Sky Palace 20,000 coins |
+| Dream Homes | 10, +5% each | Built, then replaced (see section 6): she builds her own house in Blossom Bay instead |
 | English | English tasks, 🔊, Word Book, quiz | 97 words; phone voice reads tasks and orders aloud; 3-question quiz after each level |
 | Russian help | Cyrillic or Latin | Chosen on first start, changeable in Settings; can be switched off to practise English only |
-| Pacing | — | Simulation: all houses after 7.2–8.4 h; all restaurants open after about 2.3 h |
+| Pacing | — | Stand-alone version: all houses after 7.2–8.4 h. Inside Blossom Bay: see README |
+
+## 6. Change after her feedback (October 2026)
+
+Her words: *"Папа эта игра не такая как я имела в виду. Я имела в виду что я могу выходить из кафе и самой строить свой дом."* (Dad, this isn't what I meant. I meant that I can walk out of the café and build my own house myself.)
+
+So the cooking game moved into Blossom Bay, which already has free house building:
+- The café is a building on Main Street (**Blossom Kitchen**, 🗺️ Map → 🍳). Walk to the door, tap **Cook at the Café**, and **🚪 Leave café** to walk back into town.
+- Café earnings are Blossom Bay coins and XP, scaled to the other jobs (a dish pays 50–145 coins), so she spends them on land, walls, floors and furniture for the house she builds herself.
+- The ready-made Dream Homes were removed. Money and stars from the stand-alone version move over once, including the price of any Dream Home she had bought.
+- The old link `/cook/` now opens Blossom Bay at the café.

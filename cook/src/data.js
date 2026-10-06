@@ -1,5 +1,5 @@
-// Blossom Kitchen game data: words (English + Russian), ingredients, recipes,
-// restaurants, levels and dream houses. Pure data + helpers (unit tested).
+// Blossom Kitchen café data: words (English + Russian), ingredients, recipes,
+// restaurants and levels. Pure data + helpers (unit tested).
 
 // ---------- words ----------
 // acc = Russian accusative form when it differs ("Нарежь клубнику")
@@ -245,22 +245,6 @@ export function orderWords(order) {
   }
   return out.filter(Boolean);
 }
-
-// ---------- dream houses ----------
-export const HOUSES = [
-  { id: 'studio', en: 'Tiny Studio', ru: 'Маленькая студия', price: 150 },
-  { id: 'cottage', en: 'Cozy Cottage', ru: 'Уютный коттедж', price: 400 },
-  { id: 'beach', en: 'Beach Hut', ru: 'Пляжный домик', price: 800 },
-  { id: 'treehouse', en: 'Treehouse', ru: 'Домик на дереве', price: 1500 },
-  { id: 'loft', en: 'City Loft', ru: 'Городской лофт', price: 2500 },
-  { id: 'villa', en: 'Garden Villa', ru: 'Вилла с садом', price: 4000 },
-  { id: 'chalet', en: 'Lake Chalet', ru: 'Шале у озера', price: 6000 },
-  { id: 'mansion', en: 'Palm Mansion', ru: 'Особняк с бассейном', price: 9000 },
-  { id: 'castle', en: 'Fairy Castle', ru: 'Сказочный замок', price: 13000 },
-  { id: 'palace', en: 'Sky Palace', ru: 'Небесный дворец', price: 20000 },
-];
-export const HOUSE = Object.fromEntries(HOUSES.map((h) => [h.id, h]));
-export const houseBonus = (owned) => 1 + owned.length * 0.05;
 
 // words used by a recipe (for the Word Book)
 export function recipeWords(recipeId) {

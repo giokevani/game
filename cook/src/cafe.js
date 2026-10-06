@@ -1,22 +1,20 @@
-// Blossom Kitchen main controller: renderer, restaurant scene, customers and
-// the level loop (take order -> cook step by step -> serve -> get paid).
+// Blossom Kitchen café inside Blossom Bay: walk into the café in town, cook
+// for guests step by step, then walk back out and build your house.
 import * as THREE from 'three';
-import { createRenderer, QualityManager } from '../../src/engine/renderer.js';
-import { FX } from '../../src/engine/fx.js';
-import { Audio } from '../../src/engine/audio.js';
-import { uniforms } from '../../src/engine/materials.js';
 import { Avatar } from '../../src/player/avatar.js';
 import { AVATAR_ITEMS, SKINS, HAIR_COLORS, CLOTH_COLORS, EYE_COLORS } from '../../src/data/avatar.js';
-import { celebrate, floaty, setUISound, closeAllModals } from '../../src/ui/ui.js';
+import { celebrate, floaty, closeAllModals } from '../../src/ui/ui.js';
+import { addXP } from '../../src/core/state.js';
 import { Kitchen, disposeTree } from './steps.js';
 import { buildRestaurant, SPOTS, DOOR, COUNTER_Y } from './restaurant.js';
-import { RESTAURANT, RESTAURANTS, levelInfo, makeOrder, recipeWords, LEVELS_PER } from './data.js';
-import { loadState, saveState, dishPay, finishLevel, seeWords, restaurantOpen } from './state.js';
-import { orderSentence, stepPrompt, resultWord, HOWTO } from './text.js';
+import { RESTAURANT, levelInfo, makeOrder, recipeWords, LEVELS_PER } from './data.js';
+import { cafeView, dishPay, dishXP, finishLevel, seeWords, bestOpen } from './state.js';
+import { stepPrompt, resultWord, HOWTO } from './text.js';
 import { ru, speak, setLangSettings } from './i18n.js';
 import { Hud } from './hud.js';
 import * as Screens from './screens.js';
 import * as D from './data.js';
+import './cook.css';
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const slot = (s) => AVATAR_ITEMS.filter((i) => i.slot === s).map((i) => i.id);
@@ -33,19 +31,19 @@ function randomLook() {
 
 const V = new THREE.Vector3();
 
-export class Game {
-  constructor() {
-    const { state, fresh } = loadState();
-    this.state = state;
-    this.fresh = fresh;
-    setLangSettings(state.settings);
-    this.quality = new QualityManager({ quality: 'auto' });
-    const { renderer, scene, camera } = createRenderer(document.getElementById('app'), this.quality);
-    this.renderer = renderer;
-    this.scene = scene;
-    this.camera = camera;
-    renderer.shadowMap.enabled = true;
-    scene.background = new THREE.Color('#ffe9f2');
+export class Cafe {
+  // host = the Blossom Bay game (renderer, scene, camera, audio, fx, state, hud)
+  constructor(host) {
+    this.host = host;
+    this.renderer = host.renderer;
+    this.scene = host.scene;
+    this.camera = host.camera;
+    this.fx = host.fx;
+    this.audio = host.audio;
+    this.state = cafeView(host.state); // café progress; state.coins = Blossom Bay coins
+    setLangSettings(this.state.settings);
+    this.root = new THREE.Group();
+    this.root.visible = false;
     const hemi = new THREE.HemisphereLight('#fff6fb', '#e8d0e8', 1.25);
     const sun = new THREE.DirectionalLight('#fff2e0', 1.7);
     sun.position.set(2.5, 7, 4.5);
@@ -56,12 +54,8 @@ export class Game {
     sun.shadow.bias = -0.0006;
     sun.shadow.normalBias = 0.02;
     sun.shadow.radius = 3;
-    scene.add(hemi, sun, sun.target);
-    this.sun = sun;
-    this.quality.onChange = (lv) => { renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lv.dpr)); sun.castShadow = lv.shadows; };
-    this.fx = new FX(scene);
-    this.audio = new Audio(state.settings);
-    setUISound((n) => this.audio.play(n));
+    this.root.add(hemi, sun, sun.target);
+    this.scene.add(this.root);
     this.kitchen = new Kitchen(this);
     this.hud = new Hud(this);
     this.world = null;
@@ -69,42 +63,79 @@ export class Game {
     this.customers = [];
     this.level = null;
     this.cooking = null;
-    this.cam = { from: null, to: null, t: 1, pos: new THREE.Vector3(), look: new THREE.Vector3(), curLook: new THREE.Vector3() };
-    this.clock = new THREE.Clock();
-    this.saveT = 0;
-    this.dirty = false;
+    this.active = false;
+    this.cam = { t: 1, curLook: new THREE.Vector3() };
     this.token = 0;
-    window.addEventListener('pagehide', () => this.save());
-    document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
-    // a wider lens when the phone is upright, so all three guests fit
-    const lens = () => { this.camera.fov = window.innerWidth < window.innerHeight ? 80 : 55; this.camera.updateProjectionMatrix(); };
-    lens();
-    window.addEventListener('resize', () => { lens(); if (this.view !== 'homes') this.setView(this.view || 'service', true); });
-    this.hud.update(state);
+    this.timeScale = 1; // tests speed up café time
     this.D = D; // used by the automated tests
     this.stepPrompt = stepPrompt;
   }
 
-  save() { if (!this.noSave) saveState(this.state); this.dirty = false; }
-  changed() { this.dirty = true; this.hud.update(this.state); }
+  save() { this.host.save(); }
+  changed() { this.hud.update(this.state); }
+
+  // ---------- walking in and out ----------
+  async enter() {
+    if (this.active) return;
+    const h = this.host;
+    this.active = true;
+    h.mode = 'cafe';
+    h.hud.setVisible(false);
+    // hide the town while we are inside (the particle system stays on)
+    this.hidden = h.scene.children.filter((o) => o.visible && o !== this.root && o !== h.fx.points);
+    for (const o of this.hidden) o.visible = false;
+    this.root.visible = true;
+    this.hud.show(true);
+    this.loadRestaurant(this.rid && this.state.stars ? this.rid : bestOpen(this.state));
+    this.setView('service', true);
+    this.audio.play('open');
+    if (!this.state.scriptChosen) await Screens.chooseScript(this);
+    if (!this.state.intro) {
+      await Screens.intro(this);
+      this.save();
+      return this.playLevel('cafe', 1);
+    }
+    Screens.map(this);
+  }
+
+  leave() {
+    if (!this.active) return;
+    const h = this.host;
+    this.quitLevel();
+    closeAllModals();
+    document.querySelectorAll('.screen').forEach((e) => e.remove());
+    for (const o of this.hidden || []) o.visible = true;
+    this.hidden = null;
+    this.root.visible = false;
+    this.hud.show(false);
+    this.active = false;
+    h.mode = 'play';
+    h.hud.setVisible(true);
+    // forget the swipes made while cooking, so the town camera doesn't spin
+    h.input.consumeLook();
+    h.input.consumeZoom();
+    h.rig.pitch = 0.38;
+    h.rig.yaw = h.player.facing + Math.PI;
+    h.rig.snap(h.player.pos);
+    h.audio.play('open');
+    h.save();
+    h.emit('cafeLeave');
+  }
 
   // ---------- scene ----------
   loadRestaurant(rid) {
     if (this.rid === rid && this.world) return;
-    if (this.world) { this.scene.remove(this.world); disposeTree(this.world); }
+    if (this.world) { this.root.remove(this.world); disposeTree(this.world); }
     this.rid = rid;
     this.world = buildRestaurant(RESTAURANT[rid]);
     this.world.add(this.kitchen.work);
-    this.scene.add(this.world);
-    this.scene.background = new THREE.Color(RESTAURANT[rid].wall);
+    this.root.add(this.world);
   }
 
   views() {
-    const portrait = window.innerWidth < window.innerHeight;
     return {
-      service: portrait ? { pos: [0, 3.9, 3.6], look: [0, 1.05, -1.2] } : { pos: [0, 2.6, 2.3], look: [0, 1.25, -1.6] },
-      cook: portrait ? { pos: [0, 2.3, 1.08], look: [0, COUNTER_Y + 0.02, 0.04] } : { pos: [0, 1.67, 0.61], look: [0, COUNTER_Y + 0.08, 0.02] },
-      title: portrait ? { pos: [1.2, 2.4, 5.2], look: [0, 1.4, -2] } : { pos: [2.2, 2.2, 3.6], look: [-0.5, 1.3, -2] },
+      service: { pos: [0, 2.6, 2.3], look: [0, 1.25, -1.6] },
+      cook: { pos: [0, 1.67, 0.61], look: [0, COUNTER_Y + 0.08, 0.02] },
     };
   }
   setView(name, instant = false) {
@@ -115,41 +146,24 @@ export class Game {
     this.cam.toPos = new THREE.Vector3(...v.pos);
     this.cam.toLook = new THREE.Vector3(...v.look);
     this.cam.t = instant ? 1 : 0;
-    if (instant) { this.camera.position.copy(this.cam.toPos); this.cam.curLook.copy(this.cam.toLook); this.camera.lookAt(this.cam.curLook); }
+    if (instant) { this.camera.position.copy(this.cam.toPos); this.cam.curLook.copy(this.cam.toLook); }
   }
 
-  start() {
-    this.setView('title', true);
-    const loop = () => {
-      requestAnimationFrame(loop);
-      const dt = Math.min(0.05, this.clock.getDelta()) * (this.timeScale || 1); // tests speed time up
-      this.tick(dt);
-    };
-    loop();
-  }
-
-  tick(dt) {
-    uniforms.uTime.value += dt;
-    this.quality.tick(dt);
-    // camera tween
+  // called every frame by Blossom Bay (does nothing while she is in town)
+  update(rawDt) {
+    if (!this.active) return;
+    const dt = rawDt * this.timeScale;
+    if (this.camera.fov !== 55) { this.camera.fov = 55; this.camera.updateProjectionMatrix(); }
     if (this.cam.t < 1) {
       this.cam.t = Math.min(1, this.cam.t + dt / 0.9);
       const k = this.cam.t < 0.5 ? 2 * this.cam.t ** 2 : 1 - (-2 * this.cam.t + 2) ** 2 / 2;
       this.camera.position.lerpVectors(this.cam.fromPos, this.cam.toPos, k);
       this.cam.curLook.lerpVectors(this.cam.fromLook, this.cam.toLook, k);
-    } else if (this.view === 'title') {
-      const t = uniforms.uTime.value * 0.15;
-      const v = this.views().title;
-      this.camera.position.set(v.pos[0] + Math.sin(t) * 1.2, v.pos[1] + Math.sin(t * 0.7) * 0.15, v.pos[2]);
-    }
+    } else this.camera.position.copy(this.cam.toPos);
     this.camera.lookAt(this.cam.curLook);
     this.kitchen.update(dt);
     this.updateCustomers(dt);
-    this.fx.update(dt);
-    this.renderer.render(this.scene, this.camera);
-    this.saveT += dt;
-    this.state.stats.playSec += dt;
-    if (this.saveT > 10) { this.saveT = 0; this.save(); }
+    this.state.stats.playSec += rawDt;
   }
 
   // ---------- customers ----------
@@ -256,7 +270,6 @@ export class Game {
   async playLevel(rid, L) {
     const token = ++this.token;
     closeAllModals();
-    document.querySelector('.screen.title')?.remove();
     this.loadRestaurant(rid);
     this.clearCustomers();
     this.kitchen.resetOrder({ recipe: null, vary: {}, steps: [] });
@@ -278,7 +291,8 @@ export class Game {
     if (token !== this.token) return;
     await new Promise((r) => setTimeout(r, 900));
     const lv = this.level;
-    const result = finishLevel(this.state, rid, L, lv.qualities, lv.earned);
+    const result = finishLevel(this.state, rid, L, lv.qualities);
+    if (result.bonus) lv.earned += result.bonus;
     for (const r of lv.qualities) if (r >= 0.88) this.state.stats.perfect++;
     this.changed();
     this.save();
@@ -297,7 +311,7 @@ export class Game {
     this.hud.cookMode(false);
     this.hud.levelMode(false);
     this.clearCustomers();
-    this.setView('title');
+    this.setView('service');
   }
 
   pause() { Screens.pauseMenu(this); }
@@ -363,10 +377,13 @@ export class Game {
     const to = new THREE.Vector3(c.target.x, COUNTER_Y, -0.3);
     await K.anim(0.7, (k) => { served.position.lerpVectors(from, to, k); served.position.y += Math.sin(k * Math.PI) * 0.35; });
     if (token !== this.token) { disposeTree(served); return; }
-    const pay = dishPay(order.recipe, q, this.state);
+    const pay = dishPay(order.recipe, q);
     this.state.coins += pay.total;
-    this.state.earned += pay.total;
     this.state.stats.served++;
+    const up = addXP(this.host.state, dishXP(order.recipe, q));
+    if (up) setTimeout(() => { this.audio.play('levelup'); celebrate(`Level ${up}!`, 'New things in the shops ✨'); this.host.emit('levelup', up); }, 900);
+    this.host.emit('coins', pay.total, 'cafe');
+    this.host.emit('cafeDish', order.recipe, q);
     this.level.earned += pay.total;
     this.level.tips += pay.tip;
     this.level.qualities.push(q);

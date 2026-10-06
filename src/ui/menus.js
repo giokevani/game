@@ -83,6 +83,13 @@ export function setupMenus(game) {
         game.audio?.play('sparkle');
       } }, found ? `${z.icon} ${z.name}` : `❓ ${z.name}`));
     }
+    buttons.appendChild(h('button', { class: 'btn small sun', onclick: () => {
+      click();
+      m.close();
+      game.cafeSys?.goTo();
+      game.fx.burst(game.player.pos, 'sparkle');
+      game.audio?.play('sparkle');
+    } }, '🍳 Blossom Kitchen'));
     const m = modal('🗺️ Blossom Bay', (b) => {
       cv.style.width = '100%'; cv.style.height = 'auto'; cv.style.borderRadius = '16px';
       b.append(cv, h('div', { class: 'muted', style: { marginTop: '6px' } }, 'Tap a place you have found to travel there:'), buttons);

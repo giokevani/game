@@ -11,8 +11,7 @@
     "test": "node --test test/unit/*.test.mjs",
     "test:e2e": "node test/e2e/run.mjs",
     "sim": "node test/sim/economy.mjs",
-    "test:e2e:cook": "node test/e2e/cook.mjs",
-    "sim:cook": "node test/sim/cook-economy.mjs"
+    "test:e2e:cafe": "node test/e2e/cafe.mjs"
   },
   "dependencies": {
     "@fontsource/fredoka": "^5.3.0",

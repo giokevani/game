@@ -153,7 +153,7 @@ Price basis: Claude Opus 5.5 at $4 per million input tokens, $20 per million out
 | Avatar, rides, weather, music | As planned | Done |
 | Unit tests | Logic, catalogues, reachability | 24 tests, all passing |
 | End-to-end tests | Boot, build, pets, jobs, save/reload... | 21 tests in Chromium with iPhone 11 Pro emulation, all passing |
-| Pacing | 9–11 h to finish | Simulation: 9.9–10.9 h to finish the story (3 seeds); every furniture item 11.6–14.6 h |
+| Pacing | 9–11 h to finish | Simulation: 9.9–10.9 h to finish the story (3 seeds); every furniture item 11.6–14.6 h. After the café was added (half of job time spent cooking): 10.4–10.9 h and 13.6–14.6 h |
 | Performance | < 150 draw calls, < 250k triangles | Town Square: 142 draw calls, about 466k triangles including the shadow pass. That's over the triangle target. Graphics drop to Medium or Low automatically if frame rate falls below 40 fps. Only the real-phone check can confirm how smooth it feels |
 | Real iPhone test | Your 10-minute check | Still open; see README |
 
