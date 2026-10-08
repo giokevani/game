@@ -50,6 +50,44 @@ export const WORDS = [
   W('sprinkles', 'Sprinkles', 'Посыпка', '🎊', 'food', 'посыпку'),
   W('candle', 'Candles', 'Свечи', '🕯️', 'food'),
   W('vanilla', 'Vanilla', 'Ваниль', '🌼', 'food'),
+  // more food for the Free Kitchen
+  W('grapes', 'Grapes', 'Виноград', '🍇', 'food'),
+  W('kiwi', 'Kiwi', 'Киви', '🥝', 'food'),
+  W('mango', 'Mango', 'Манго', '🥭', 'food'),
+  W('pineapple', 'Pineapple', 'Ананас', '🍍', 'food'),
+  W('peach', 'Peach', 'Персик', '🍑', 'food'),
+  W('pear', 'Pear', 'Груша', '🍐', 'food', 'грушу'),
+  W('watermelon', 'Watermelon', 'Арбуз', '🍉', 'food'),
+  W('coconut', 'Coconut', 'Кокос', '🥥', 'food'),
+  W('raspberry', 'Raspberries', 'Малина', '🫐', 'food', 'малину'),
+  W('broccoli', 'Broccoli', 'Брокколи', '🥦', 'food'),
+  W('corn', 'Corn', 'Кукуруза', '🌽', 'food', 'кукурузу'),
+  W('peas', 'Peas', 'Горошек', '🟢', 'food'),
+  W('garlic', 'Garlic', 'Чеснок', '🧄', 'food'),
+  W('eggplant', 'Eggplant', 'Баклажан', '🍆', 'food'),
+  W('spinach', 'Spinach', 'Шпинат', '🥬', 'food'),
+  W('beans', 'Beans', 'Фасоль', '🫘', 'food'),
+  W('yogurt', 'Yogurt', 'Йогурт', '🥛', 'food'),
+  W('honey', 'Honey', 'Мёд', '🍯', 'food'),
+  W('chicken', 'Chicken', 'Курица', '🍗', 'food', 'курицу'),
+  W('ham', 'Ham', 'Ветчина', '🥓', 'food', 'ветчину'),
+  W('shrimp', 'Shrimp', 'Креветки', '🦐', 'food'),
+  W('tuna', 'Tuna', 'Тунец', '🐟', 'food'),
+  W('noodles', 'Noodles', 'Лапша', '🍜', 'food', 'лапшу'),
+  W('tortilla', 'Tortilla', 'Лепёшка', '🫓', 'food', 'лепёшку'),
+  W('croissant', 'Croissant', 'Круассан', '🥐', 'food'),
+  W('cereal', 'Cereal', 'Хлопья', '🥣', 'food'),
+  W('marshmallow', 'Marshmallow', 'Маршмеллоу', '☁️', 'food'),
+  W('candy', 'Candy', 'Конфета', '🍬', 'food', 'конфету'),
+  W('caramel', 'Caramel', 'Карамель', '🍮', 'food', 'карамель'),
+  W('gummy', 'Gummy bears', 'Мармеладные мишки', '🐻', 'food'),
+  W('juice', 'Juice', 'Сок', '🧃', 'food'),
+  W('water', 'Water', 'Вода', '💧', 'food', 'воду'),
+  W('tea', 'Tea', 'Чай', '🍵', 'food'),
+  W('cocoa', 'Cocoa', 'Какао', '☕', 'food'),
+  W('cinnamon', 'Cinnamon', 'Корица', '🟤', 'food', 'корицу'),
+  W('basil', 'Basil', 'Базилик', '🌿', 'food'),
+  W('ice', 'Ice', 'Лёд', '🧊', 'food'),
   // dishes
   W('pancakes', 'Pancakes', 'Блинчики', '🥞', 'dish'),
   W('fruitsalad', 'Fruit salad', 'Фруктовый салат', '🍇', 'dish'),
@@ -113,6 +151,18 @@ export const WORD = Object.fromEntries(WORDS.map((w) => [w.id, w]));
 // ---------- ingredients that can be chopped / shown in 3D ----------
 // shape: round (lathe profile), long (along x), box, leaf
 export const CHOP = {
+  kiwi: { shape: 'round', r: 0.05, sy: 0.85, skin: '#8a6a3a', inner: '#7ccf4a', core: '#fffbe0', coreR: 0.3, cuts: 3 },
+  mango: { shape: 'round', r: 0.07, sy: 1.25, skin: '#ffb03a', inner: '#ffcf5a', cuts: 3 },
+  peach: { shape: 'round', r: 0.07, skin: '#ffa98a', inner: '#ffd08a', core: '#b0603a', coreR: 0.25, cuts: 3 },
+  pear: { shape: 'round', r: 0.07, sy: 1.3, skin: '#b8d84a', inner: '#fff6d0', cuts: 3 },
+  watermelon: { shape: 'round', r: 0.13, skin: '#3f9a4a', inner: '#ff5a6a', dots: '#ff7a88', cuts: 4 },
+  coconut: { shape: 'round', r: 0.08, skin: '#7a5030', inner: '#ffffff', cuts: 2 },
+  pineapple: { shape: 'long', r: 0.07, len: 0.24, skin: '#c8902a', inner: '#ffe066', core: '#fff3a0', coreR: 0.3, cuts: 4 },
+  eggplant: { shape: 'long', r: 0.05, len: 0.28, taper: -0.4, skin: '#6a3a8a', inner: '#f3ead0', cuts: 4 },
+  garlic: { shape: 'round', r: 0.04, sy: 0.9, skin: '#f6f0e4', inner: '#fffaf0', cuts: 2 },
+  chicken: { shape: 'box', w: 0.2, h: 0.07, d: 0.11, skin: '#e8c090', inner: '#fff0e0', cuts: 3 },
+  ham: { shape: 'box', w: 0.2, h: 0.06, d: 0.12, skin: '#ff9aa8', inner: '#ffc0c8', cuts: 3 },
+  tuna: { shape: 'box', w: 0.2, h: 0.06, d: 0.1, skin: '#c8506a', inner: '#e0788a', cuts: 3 },
   tomato: { shape: 'round', r: 0.1, skin: '#e8453c', inner: '#ff8a78', dots: '#ffe08a', cuts: 3 },
   cucumber: { shape: 'long', r: 0.045, len: 0.34, skin: '#3f9a4a', inner: '#dff5c8', dots: '#f4fbe8', cuts: 4 },
   carrot: { shape: 'long', r: 0.042, len: 0.3, taper: 0.5, skin: '#ff8a2e', inner: '#ffb366', cuts: 4 },
@@ -134,6 +184,29 @@ export const CHOP = {
   tofu: { shape: 'box', w: 0.16, h: 0.08, d: 0.1, skin: '#fbf6ea', inner: '#ffffff', cuts: 3 },
   chocolate: { shape: 'box', w: 0.2, h: 0.03, d: 0.1, skin: '#6b3f2a', inner: '#8a5a3c', cuts: 3 },
 };
+
+// ---------- Free Kitchen pantry ----------
+// kind: whole (can be chopped), liquid (fills up), powder (dusts), small
+// (little round bits), chunk (pieces)
+export const PANTRY = [
+  { id: 'fruit', en: 'Fruit', icon: '🍓', items: ['strawberry', 'banana', 'apple', 'orange', 'lemon', 'cherry', 'blueberry', 'raspberry', 'grapes', 'kiwi', 'mango', 'pineapple', 'peach', 'pear', 'watermelon', 'coconut', 'avocado'] },
+  { id: 'veg', en: 'Vegetables', icon: '🥕', items: ['tomato', 'cucumber', 'carrot', 'potato', 'onion', 'garlic', 'pepper', 'mushroom', 'lettuce', 'spinach', 'broccoli', 'corn', 'peas', 'beans', 'eggplant', 'olive', 'basil'] },
+  { id: 'dairy', en: 'Milk & eggs', icon: '🥛', items: ['milk', 'egg', 'butter', 'cheese', 'cream', 'yogurt', 'icecream'] },
+  { id: 'meat', en: 'Meat & fish', icon: '🍗', items: ['chicken', 'ham', 'sausage', 'patty', 'salmon', 'tuna', 'shrimp', 'tofu'] },
+  { id: 'bakery', en: 'Bread & pasta', icon: '🍞', items: ['flour', 'bread', 'bun', 'croissant', 'tortilla', 'dough', 'pasta', 'noodles', 'rice', 'cereal', 'nori'] },
+  { id: 'sweet', en: 'Sweets', icon: '🍬', items: ['sugar', 'chocolate', 'honey', 'jam', 'caramel', 'marshmallow', 'candy', 'gummy', 'sprinkles', 'vanilla', 'cinnamon'] },
+  { id: 'drink', en: 'Drinks & sauces', icon: '🧃', items: ['water', 'juice', 'tea', 'cocoa', 'ice', 'sauce', 'ketchup', 'mustard', 'salt'] },
+];
+export const KIND = {
+  milk: 'liquid', cream: 'liquid', yogurt: 'liquid', honey: 'liquid', jam: 'liquid', caramel: 'liquid', water: 'liquid', juice: 'liquid', tea: 'liquid', cocoa: 'liquid',
+  sauce: 'liquid', ketchup: 'liquid', mustard: 'liquid', egg: 'liquid',
+  flour: 'powder', sugar: 'powder', salt: 'powder', cinnamon: 'powder', vanilla: 'powder',
+  blueberry: 'small', raspberry: 'small', grapes: 'small', cherry: 'small', peas: 'small', corn: 'small', beans: 'small', olive: 'small', rice: 'small', cereal: 'small',
+  candy: 'small', gummy: 'small', marshmallow: 'small', sprinkles: 'small', ice: 'small', shrimp: 'small', basil: 'small', spinach: 'small', broccoli: 'small',
+  butter: 'chunk', cheese: 'chunk', chocolate: 'chunk', icecream: 'chunk', sausage: 'chunk', patty: 'chunk', tofu: 'chunk', bread: 'chunk', bun: 'chunk', croissant: 'chunk',
+  tortilla: 'chunk', dough: 'chunk', pasta: 'chunk', noodles: 'chunk', nori: 'chunk',
+};
+export const kindOf = (id) => KIND[id] || (CHOP[id] ? 'whole' : 'chunk');
 
 // ---------- recipes ----------
 // Step types: add (pick the right item), stir (circles), chop (swipes),
@@ -188,33 +261,13 @@ export const RECIPES = [
 export const RECIPE = Object.fromEntries(RECIPES.map((r) => [r.id, r]));
 
 export const RESTAURANTS = [
-  { id: 'cafe', en: 'Pancake Café', ru: 'Кафе блинчиков', emoji: '🥞', stars: 0, recipes: ['pancakes', 'fruitsalad', 'toast', 'smoothie'], wall: '#ffe0ec', trim: '#ff8fb5', floor: '#f6e2cf', accent: '#ffd45e' },
-  { id: 'diner', en: 'Burger Diner', ru: 'Бургерная', emoji: '🍔', stars: 6, recipes: ['burger', 'fries', 'hotdog', 'milkshake'], wall: '#e0f4ff', trim: '#ff6f6f', floor: '#f3f3f3', accent: '#7fc6ff' },
-  { id: 'pizza', en: 'Pizza Place', ru: 'Пиццерия', emoji: '🍕', stars: 15, recipes: ['pizza', 'spaghetti', 'salad'], wall: '#fff3d6', trim: '#4fbf5a', floor: '#e8c9a8', accent: '#ff6f6f' },
-  { id: 'sushi', en: 'Sushi Bar', ru: 'Суши-бар', emoji: '🍣', stars: 26, recipes: ['sushi', 'miso', 'onigiri'], wall: '#eaf6ef', trim: '#3e5c8a', floor: '#d9b894', accent: '#ff8a8a' },
-  { id: 'bakery', en: 'Sweet Bakery', ru: 'Кондитерская', emoji: '🧁', stars: 38, recipes: ['cupcakes', 'cake', 'cookies'], wall: '#efe6ff', trim: '#b58cff', floor: '#ffe9f3', accent: '#ffd45e' },
+  { id: 'cafe', en: 'Pancake Café', ru: 'Кафе блинчиков', emoji: '🥞', recipes: ['pancakes', 'fruitsalad', 'toast', 'smoothie'], wall: '#ffe0ec', trim: '#ff8fb5', floor: '#f6e2cf', accent: '#ffd45e' },
+  { id: 'diner', en: 'Burger Diner', ru: 'Бургерная', emoji: '🍔', recipes: ['burger', 'fries', 'hotdog', 'milkshake'], wall: '#e0f4ff', trim: '#ff6f6f', floor: '#f3f3f3', accent: '#7fc6ff' },
+  { id: 'pizza', en: 'Pizza Place', ru: 'Пиццерия', emoji: '🍕', recipes: ['pizza', 'spaghetti', 'salad'], wall: '#fff3d6', trim: '#4fbf5a', floor: '#e8c9a8', accent: '#ff6f6f' },
+  { id: 'sushi', en: 'Sushi Bar', ru: 'Суши-бар', emoji: '🍣', recipes: ['sushi', 'miso', 'onigiri'], wall: '#eaf6ef', trim: '#3e5c8a', floor: '#d9b894', accent: '#ff8a8a' },
+  { id: 'bakery', en: 'Sweet Bakery', ru: 'Кондитерская', emoji: '🧁', recipes: ['cupcakes', 'cake', 'cookies'], wall: '#efe6ff', trim: '#b58cff', floor: '#ffe9f3', accent: '#ffd45e' },
 ];
 export const RESTAURANT = Object.fromEntries(RESTAURANTS.map((r) => [r.id, r]));
-export const LEVELS_PER = 8;
-
-// level description: which recipes, how many customers, how patient
-export function levelInfo(rid, level) {
-  const r = RESTAURANT[rid];
-  const busy = level > LEVELS_PER; // endless "Busy Day"
-  const L = Math.min(level, LEVELS_PER);
-  const n = Math.min(r.recipes.length, L <= 1 ? 1 : L <= 3 ? 2 : L <= 5 ? 3 : 4);
-  return {
-    recipes: r.recipes.slice(0, n),
-    customers: busy ? 10 : 3 + Math.ceil(L / 2),
-    patience: Math.max(70, 130 - L * 7),
-    combo: L >= 6 ? 0.3 : 0,
-  };
-}
-
-export function starsFor(avgQuality) {
-  return avgQuality >= 0.88 ? 3 : avgQuality >= 0.72 ? 2 : avgQuality >= 0.45 ? 1 : 0;
-}
-
 // resolve a recipe for one order: pick variants, drop skipped steps
 export function makeOrder(recipeId, rnd = Math.random) {
   const r = RECIPE[recipeId];

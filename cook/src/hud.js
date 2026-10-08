@@ -11,11 +11,9 @@ export class Hud {
     const root = document.getElementById('ui');
     this.coinsTxt = h('span', { class: 'txt' }, '0');
     this.coins = h('div', { class: 'pill coins' }, h('span', { class: 'ico' }, '🪙'), this.coinsTxt);
-    this.starsTxt = h('span', { class: 'txt' }, '0');
-    this.stars = h('div', { class: 'pill stars-pill' }, h('span', { class: 'ico' }, '⭐'), this.starsTxt);
     this.levelTxt = h('div', { class: 'pill lvl-pill hide' });
     this.guests = h('div', { class: 'pill hide' });
-    this.tl = h('div', { class: 'hud-tl' }, h('div', { class: 'hud-row' }, this.coins, this.stars), h('div', { class: 'hud-row' }, this.levelTxt, this.guests));
+    this.tl = h('div', { class: 'hud-tl' }, h('div', { class: 'hud-row' }, this.coins), h('div', { class: 'hud-row' }, this.levelTxt, this.guests));
     this.pauseBtn = h('button', { class: 'mbtn hide', 'aria-label': 'Pause', onclick: () => { click(); game.pause(); } }, '⏸');
     this.tr = h('div', { class: 'hud-tr' }, this.pauseBtn);
     // cooking overlay
@@ -45,18 +43,18 @@ export class Hud {
     if (this.lastCoins !== null && s.coins > this.lastCoins) { this.coins.classList.remove('bump'); void this.coins.offsetWidth; this.coins.classList.add('bump'); }
     this.lastCoins = s.coins;
     this.coinsTxt.textContent = fmt(s.coins);
-    this.starsTxt.textContent = String(Object.values(s.stars).reduce((a, b) => a + b, 0));
   }
 
   levelMode(on, label = '', guests = '') {
     this.levelTxt.classList.toggle('hide', !on);
     this.guests.classList.toggle('hide', !on);
     this.pauseBtn.classList.toggle('hide', !on);
-    this.stars.classList.toggle('hide', on);
     this.levelTxt.textContent = label;
     this.guests.textContent = guests;
   }
   setGuests(txt) { this.guests.textContent = txt; }
+  // guests wait as long as she likes: hide the patience bars
+  relaxed(on) { this.bubbles.classList.toggle('relaxed', on); }
 
   cookMode(on, orders, idx) {
     this.prompt.classList.toggle('hide', !on);

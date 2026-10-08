@@ -7,8 +7,9 @@ import { celebrate, floaty, closeAllModals } from '../../src/ui/ui.js';
 import { addXP } from '../../src/core/state.js';
 import { Kitchen, disposeTree } from './steps.js';
 import { buildRestaurant, SPOTS, DOOR, COUNTER_Y } from './restaurant.js';
-import { RESTAURANT, levelInfo, makeOrder, recipeWords, LEVELS_PER } from './data.js';
-import { cafeView, dishPay, dishXP, finishLevel, seeWords, bestOpen } from './state.js';
+import { RESTAURANT, makeOrder, recipeWords } from './data.js';
+import { cafeView, dishPay, dishXP, seeWords } from './state.js';
+import { FreeKitchen } from './free.js';
 import { stepPrompt, resultWord, HOWTO } from './text.js';
 import { ru, speak, setLangSettings } from './i18n.js';
 import { Hud } from './hud.js';
@@ -67,11 +68,13 @@ export class Cafe {
     this.cam = { t: 1, curLook: new THREE.Vector3() };
     this.token = 0;
     this.timeScale = 1; // tests speed up café time
+    this.free = new FreeKitchen(this);
     this.D = D; // used by the automated tests
     this.stepPrompt = stepPrompt;
   }
 
   save() { this.host.save(); }
+  randomLook() { return randomLook(); }
   changed() { this.hud.update(this.state); }
 
   // ---------- walking in and out ----------
@@ -86,16 +89,15 @@ export class Cafe {
     for (const o of this.hidden) o.visible = false;
     this.root.visible = true;
     this.hud.show(true);
-    this.loadRestaurant(this.rid && this.state.stars ? this.rid : bestOpen(this.state));
+    this.loadRestaurant(this.rid || 'cafe');
     this.setView('service', true);
     this.audio.play('open');
     if (!this.state.scriptChosen) await Screens.chooseScript(this);
     if (!this.state.intro) {
       await Screens.intro(this);
       this.save();
-      return this.playLevel('cafe', 1);
     }
-    Screens.map(this);
+    Screens.menu(this);
   }
 
   leave() {
@@ -163,6 +165,7 @@ export class Cafe {
     this.camera.lookAt(this.cam.curLook);
     this.kitchen.update(dt);
     this.updateCustomers(dt);
+    if (this.mode === 'free') this.free.update(dt);
     this.state.stats.playSec += rawDt;
   }
 
@@ -240,6 +243,7 @@ export class Cafe {
   customerLeaves(c, happy) {
     c.state = 'leave';
     c.bubble.place(0, 0, false);
+    if (!this.level) { c.path = [new THREE.Vector3(c.target.x, 0, -2.2), new THREE.Vector3(DOOR.x, 0, -3.8), DOOR.clone()]; return; }
     if (!happy) {
       const missed = c.orders.length - c.delivered;
       for (let i = 0; i < missed; i++) this.level.qualities.push(0);
@@ -264,40 +268,30 @@ export class Cafe {
     for (const c of [...this.customers]) this.removeCustomer(c);
   }
 
-  guestText() { const L = this.level; return `😊 ${L.served}/${L.info.customers}`; }
+  guestText() { return `😊 ${this.level.served}`; }
 
-  // ---------- the level loop ----------
-  async playLevel(rid, L) {
-    const token = ++this.token;
+  // ---------- serving guests: no levels, guests keep coming ----------
+  serveGuests(rid) {
+    this.quitLevel();
     closeAllModals();
     this.loadRestaurant(rid);
-    this.clearCustomers();
-    this.kitchen.resetOrder({ recipe: null, vary: {}, steps: [] });
-    const info = levelInfo(rid, L);
-    const busy = L > LEVELS_PER;
-    this.level = { rid, L, info, busy, spawned: 0, done: 0, served: 0, left: 0, qualities: [], earned: 0, tips: 0, words: new Set(), spawnT: 0.8, maxSpots: busy ? 3 : L <= 2 ? 1 : L <= 5 ? 2 : 3, over: false };
-    const label = `${RESTAURANT[rid].emoji} ${busy ? 'Busy Day' : 'Level ' + L}`;
-    this.hud.levelMode(true, label, this.guestText());
+    const R = RESTAURANT[rid];
+    this.mode = 'serve';
+    this.level = { rid, info: { recipes: R.recipes, customers: Infinity, patience: Infinity, combo: 0.15 }, spawned: 0, done: 0, served: 0, left: 0, qualities: [], earned: 0, tips: 0, words: new Set(), spawnT: 0.8, maxSpots: 3, over: false };
+    this.hud.levelMode(true, `${R.emoji} ${R.en}`, this.guestText());
+    this.hud.relaxed(true);
     this.setView('service');
-    this.level.over = true; // hold spawns during the intro card
-    await Screens.levelIntro(this, rid, L, info);
-    if (token !== this.token) return;
-    this.level.over = false;
     this.audio.play('quest');
-    await new Promise((res) => {
-      const chk = () => { if (token !== this.token) return; if (this.level.over && !this.cooking) res(); else setTimeout(chk, 250); };
-      chk();
-    });
-    if (token !== this.token) return;
-    await new Promise((r) => setTimeout(r, 900));
-    const lv = this.level;
-    const result = finishLevel(this.state, rid, L, lv.qualities);
-    if (result.bonus) lv.earned += result.bonus;
-    for (const r of lv.qualities) if (r >= 0.88) this.state.stats.perfect++;
-    this.changed();
-    this.save();
-    this.hud.levelMode(false);
-    await Screens.results(this, lv, result);
+    const en = 'Tap a guest to take the order!';
+    speak(en);
+    this.hud.showTip('Нажми на облачко над гостем, чтобы принять заказ. Гости ждут сколько угодно!');
+  }
+
+  openFree() {
+    this.quitLevel();
+    closeAllModals();
+    this.mode = 'free';
+    return this.free.open();
   }
 
   quitLevel() {
@@ -305,11 +299,14 @@ export class Cafe {
     this.level = null;
     this.cooking = null;
     this.paused = false;
+    if (this.mode === 'free') this.free.close();
+    this.mode = null;
     this.kitchen.endStep();
     this.kitchen.updaters.clear();
     this.kitchen.resetOrder({ recipe: null, vary: {}, steps: [] });
     this.hud.cookMode(false);
     this.hud.levelMode(false);
+    this.hud.relaxed(false);
     this.clearCustomers();
     this.setView('service');
   }
@@ -380,13 +377,10 @@ export class Cafe {
     const pay = dishPay(order.recipe, q);
     this.state.coins += pay.total;
     this.state.stats.served++;
-    const up = addXP(this.host.state, dishXP(order.recipe, q));
-    if (up) setTimeout(() => { this.audio.play('levelup'); celebrate(`Level ${up}!`, 'New things in the shops ✨'); this.host.emit('levelup', up); }, 900);
+    addXP(this.host.state, dishXP(order.recipe, q));
     this.host.emit('coins', pay.total, 'cafe');
     this.host.emit('cafeDish', order.recipe, q);
-    this.level.earned += pay.total;
-    this.level.tips += pay.tip;
-    this.level.qualities.push(q);
+    if (this.level) { this.level.earned += pay.total; this.level.tips += pay.tip; this.level.qualities.push(q); }
     this.changed();
     this.fx.burst(to.clone().add(new THREE.Vector3(0, 0.3, 0)), 'coins', { n: 8 });
     this.fx.burst(c.av.root.position.clone().add(new THREE.Vector3(0, 1.6, 0)), 'hearts', { n: q >= 0.72 ? 6 : 2 });
@@ -410,7 +404,7 @@ export class Cafe {
     served.position.set(0, 0, 0);
     c.av.root.attach(served);
     for (const s of c.served) { c.av.root.attach(s); s.position.set(0, 0.95, 0.5); s.scale.setScalar(0.9); }
-    this.level.served++;
+    if (this.level) this.level.served++;
     this.customerLeaves(c, true);
   }
 }

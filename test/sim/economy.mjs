@@ -9,8 +9,14 @@ import { EGGS, EGG, rollEgg, stageOf, needReward, SPECIES } from '../../src/data
 import { SEEDS, jobLevel, payMul, cakeRules, floristRules, rollFish, FISH, deliveryPay } from '../../src/data/jobs.js';
 import { newState, levelFromXP } from '../../src/core/state.js';
 import * as HM from '../../src/house/model.js';
-import { RESTAURANTS, LEVELS_PER, levelInfo, makeOrder } from '../../cook/src/data.js';
-import { cafeView, dishPay, dishXP, finishLevel, levelOpen, restaurantOpen, levelKey } from '../../cook/src/state.js';
+import { RESTAURANTS, makeOrder } from '../../cook/src/data.js';
+import { dishPay, dishXP } from '../../cook/src/state.js';
+import { applyFreePlayData } from '../../src/core/freeplay.js';
+
+// The shipped game runs in free play (no levels, only clothes cost coins), where
+// there is nothing to save up for. This model measures the original paid
+// economy; FREE=1 switches the free-play data on for a quick sanity run.
+if (process.env.FREE) applyFreePlayData();
 
 const MODEL = {
   hourMix: { job: 20, pets: 12, build: 16, explore: 12 },   // minutes per hour
@@ -28,7 +34,7 @@ const MODEL = {
   // café seconds per step type (hands-on cooking), plus per step / per guest / per level overheads
   cafeStep: { add: (s) => 2 + s.items.length * 1.6, stir: (s) => 1.5 + s.turns * 1.1, chop: () => 5, cook: (s) => (s.flip ? 9 : 6), pour: () => 4,
     spread: () => 5, place: (s) => 1.5 + s.n * 0.7, stack: (s) => 1.5 + s.layers.length * 1.1, roll: () => 4, slice: (s) => 1.5 + s.cuts * 1.1 },
-  cafeStepOverhead: 1.4, cafeGuestOverhead: 9, cafeLevelOverhead: 40,
+  cafeStepOverhead: 1.4, cafeGuestOverhead: 9,
 };
 
 let seed = Number(process.env.SEED || 12345);
@@ -194,39 +200,18 @@ function questNeeds() {
   return need;
 }
 
-// ---- café (the Blossom Kitchen levels, with the real recipes, pay and unlocks)
-const cafe = cafeView(s);
-let cafeLvl = null, cafeClock = 0;
-function nextCafeLevel() {
-  for (const R of [...RESTAURANTS].reverse()) {
-    if (!restaurantOpen(cafe, R.id)) continue;
-    for (let L = 1; L <= LEVELS_PER; L++) if (levelOpen(cafe, R.id, L) && !(cafe.stars[levelKey(R.id, L)] >= 1)) return [R.id, L];
-    const low = [...Array(LEVELS_PER)].map((_, i) => i + 1).find((L) => (cafe.stars[levelKey(R.id, L)] || 0) < 3);
-    return [R.id, low || LEVELS_PER + 1];
-  }
-  return ['cafe', 1];
-}
+// ---- café (guests keep coming; she picks any menu)
+let cafeClock = 0;
 function cafeMinute() {
   cafeClock += 60;
   while (cafeClock > 0) {
-    if (!cafeLvl) { const [rid, L] = nextCafeLevel(); cafeLvl = { rid, L, info: levelInfo(rid, L), qs: [] }; }
-    const info = cafeLvl.info;
-    const o = makeOrder(info.recipes[Math.floor(rnd() * info.recipes.length)], rnd);
+    const R = RESTAURANTS[Math.floor(rnd() * RESTAURANTS.length)];
+    const o = makeOrder(R.recipes[Math.floor(rnd() * R.recipes.length)], rnd);
     for (const st of o.steps) cafeClock -= MODEL.cafeStep[st.t](st) + MODEL.cafeStepOverhead;
     cafeClock -= MODEL.cafeGuestOverhead;
     const [q0, q1] = MODEL.cafeQuality;
     const q = q0 + rnd() * (q1 - q0);
-    const p = dishPay(o.recipe, q);
-    give(p.total, dishXP(o.recipe, q), 'cafe');
-    cafeLvl.qs.push(q);
-    if (cafeLvl.qs.length >= info.customers) {
-      const before = s.player.coins;
-      finishLevel(cafe, cafeLvl.rid, cafeLvl.L, cafeLvl.qs);
-      earned.cafe += s.player.coins - before;
-      give(40, 0, 'cafe'); // word quiz, about 2 of 3 right
-      cafeClock -= MODEL.cafeLevelOverhead;
-      cafeLvl = null;
-    }
+    give(dishPay(o.recipe, q).total, dishXP(o.recipe, q), 'cafe');
   }
 }
 

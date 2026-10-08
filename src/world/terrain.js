@@ -28,7 +28,7 @@ export function terrainHeight(x, z) {
   }
   // pond
   const pd = ((x - POND.x) / POND.rx) ** 2 + ((z - POND.z) / POND.rz) ** 2;
-  if (pd < 1.6) h -= Math.max(0, 1.6 - pd) * 0.9;
+  if (pd < 1.6) h -= Math.max(0, 1.6 - pd) * 0.9 + Math.max(0, 1 - pd) * 1.8; // deep enough to swim and sail in the middle
   return h;
 }
 

@@ -10,7 +10,7 @@ export class HUD {
     this.lvlTxt = h('div', { class: 'txt' }, 'Level 1');
     this.lvlNum = h('span', { class: 'ico' }, '1');
     this.lvlBar = h('i');
-    this.lvl = h('div', { class: 'pill lvl' }, this.lvlNum, this.lvlTxt, h('div', { class: 'bar' }, this.lvlBar));
+    this.lvl = h('div', { class: 'pill lvl', style: { display: 'none' } }, this.lvlNum, this.lvlTxt, h('div', { class: 'bar' }, this.lvlBar)); // free play: no levels
     this.needs = h('div', { class: 'needs' });
     this.zoneTxt = h('div', { class: 'pill', style: { fontSize: '14px', height: '28px', padding: '0 10px', display: 'none' } });
     this.tl = h('div', { class: 'hud-tl' }, h('div', { class: 'hud-row' }, this.coins, this.lvl), this.needs);

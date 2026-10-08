@@ -6,7 +6,8 @@ import { ORIGIN, FLOOR_Y, itemGroup } from './view.js';
 import { FURN, FURNITURE, CATEGORIES, PALETTE } from '../data/furniture.js';
 import { FLOORS, WALLPAPERS, EXTERIORS, ROOF_COLORS, OPENINGS, FLOOR, WALLPAPER, EXTERIOR, OPENING, PRICES } from '../data/houseStyles.js';
 import { h, root, click, toast, modal, celebrate, confirmBox, fmt } from '../ui/ui.js';
-import { spend, addCoins, level as levelOf } from '../core/state.js';
+import { spend, addCoins } from '../core/state.js';
+import { unlockedLevel } from '../core/freeplay.js';
 import { furnitureThumb, lazyThumb } from './thumbs.js';
 
 const T = HM.TILE;
@@ -18,6 +19,7 @@ const TOOLS = [
   { id: 'walls', icon: '🧱', label: 'Walls' },
   { id: 'openings', icon: '🚪', label: 'Doors' },
   { id: 'paint', icon: '🎨', label: 'Paint' },
+  { id: 'erase', icon: '🧽', label: 'Erase' },
   { id: 'house', icon: '🏡', label: 'House' },
 ];
 
@@ -76,7 +78,7 @@ export class BuildMode {
 
   get house() { return this.sys.house; }
   get state() { return this.game.state; }
-  get lvl() { return levelOf(this.game.state); }
+  get lvl() { return unlockedLevel(); } // free play: everything is open
 
   enter() {
     if (this.active) return;
@@ -186,6 +188,9 @@ export class BuildMode {
     else if (id === 'openings') this.openingDrawer();
     else if (id === 'paint') this.styleDrawer('paint');
     else if (id === 'house') { this.drawer.classList.add('hide'); this.housePanel(); }
+    else if (id === 'erase') { this.drawer.classList.add('short'); hint('🧽 Tap or drag over floor to remove it. Its walls and doors go too, and furniture goes back into your bag.'); }
+    if (id === 'erase') this.erase = true;
+    else if (id !== 'floor') this.erase = false;
   }
 
   card(o) {
@@ -355,6 +360,10 @@ export class BuildMode {
     if (this.pointers.size === 2) {
       const [a, b] = [...this.pointers.values()];
       this.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+      // a second finger means pinch-zoom: forget the paint stroke, and take
+      // back any tile the first finger already laid in the last moment
+      this.pendingPaint = null;
+      if (this.stroke && performance.now() - this.stroke.t0 < 600) this.undoStroke();
       this.stroke = null;
       return;
     }
@@ -362,7 +371,8 @@ export class BuildMode {
     const loc = this.screenToLocal(e.clientX, e.clientY);
     if (!loc) return;
     if (this.ghost && e.button !== 2) { this.dragGhost = true; this.moveGhost(loc.x, loc.z); return; }
-    if (this.tool === 'floor' && e.button !== 2) { this.stroke = { done: new Set(), blocked: false, spent: 0 }; this.paintFloor(loc); }
+    // painting starts once the finger moves or lifts, so a pinch never paints
+    if ((this.tool === 'floor' || this.tool === 'erase') && e.button !== 2) this.pendingPaint = { loc, id: e.pointerId };
   }
 
   move(e) {
@@ -388,6 +398,7 @@ export class BuildMode {
     }
     if (!loc0) return;
     if (this.dragGhost && this.ghost) { this.moveGhost(loc0.x, loc0.z); return; }
+    if (this.pendingPaint && this.pendingPaint.id === e.pointerId && p.moved > 6) { this.startStroke(this.pendingPaint.loc); this.pendingPaint = null; }
     if (this.stroke) { this.paintFloor(loc0); return; }
     this.hoverAt(loc0);
     // otherwise: drag spins the camera
@@ -406,6 +417,13 @@ export class BuildMode {
     this.pointers.delete(e.pointerId);
     if (this.pointers.size < 2) this.pinch = null;
     if (!p) return;
+    if (this.pendingPaint && this.pendingPaint.id === e.pointerId) {
+      // a single tap paints (or erases) one tile
+      const pp = this.pendingPaint;
+      this.pendingPaint = null;
+      if (this.pointers.size === 0) { this.startStroke(pp.loc); this.endStroke(); }
+      return;
+    }
     if (this.stroke) { this.endStroke(); return; }
     if (this.dragGhost) { this.dragGhost = false; return; }
     const tap = p.moved < 12 && performance.now() - p.t < 500;
@@ -432,9 +450,9 @@ export class BuildMode {
 
   hoverAt(loc) {
     const v = this.sys.view;
-    if (this.tool === 'floor' || this.tool === 'paint') {
+    if (this.tool === 'floor' || this.tool === 'paint' || this.tool === 'erase') {
       const i = Math.floor(loc.x / T), j = Math.floor(loc.z / T);
-      if (HM.inPlot(this.house, i, j)) v.showTile(i, j, this.erase && this.tool === 'floor' ? 0xff8a8a : 0x7fffd0); else v.showTile(null);
+      if (HM.inPlot(this.house, i, j)) v.showTile(i, j, this.erase && this.tool !== 'paint' ? 0xff8a8a : 0x7fffd0); else v.showTile(null);
     } else if (this.tool === 'walls' || this.tool === 'openings') {
       const k = this.edgeAt(loc);
       v.showEdge(k);
@@ -459,10 +477,10 @@ export class BuildMode {
     this.sys.view.showTile(i, j, this.erase ? 0xff8a8a : 0x7fffd0);
     if (!HM.inPlot(this.house, i, j)) { if (!s.warned) { toast('That is outside your land. Buy more land in 🏡 House.', { icon: '🌳' }); s.warned = true; } return; }
     const hs = this.house;
+    s.prev ||= {};
+    if (!(k in s.prev)) s.prev[k] = hs.tiles[k] ? { ...hs.tiles[k] } : null;
     if (this.erase) {
       if (!hs.tiles[k]) return;
-      const onIt = hs.furniture.some((f) => Math.floor(f.x / T) === i && Math.floor(f.z / T) === j && FURN[f.id]?.place !== 'wall');
-      if (onIt) { if (!s.blocked) toast('Move the furniture off first!', { icon: '🛋️' }); s.blocked = true; return; }
       if (Object.keys(hs.tiles).length <= 1) { toast('Your house needs at least one tile!', { icon: '🏠' }); return; }
       HM.removeTile(hs, i, j);
       addCoins(this.state, PRICES.tile);
@@ -481,6 +499,23 @@ export class BuildMode {
     const now = performance.now();
     if (!s.last || now - s.last > 90) { s.last = now; this.sys.view.rebuildStructure(hs); s.dirty = false; }
     this.refreshTop();
+  }
+
+  startStroke(loc) {
+    this.stroke = { done: new Set(), prev: {}, blocked: false, spent: 0, t0: performance.now() };
+    this.paintFloor(loc);
+  }
+
+  // put the tiles of the current stroke back the way they were
+  undoStroke() {
+    const s = this.stroke;
+    if (!s) return;
+    for (const [k, prev] of Object.entries(s.prev)) {
+      const [i, j] = k.split(',').map(Number);
+      if (prev) this.house.tiles[k] = { ...prev }; else HM.removeTile(this.house, i, j);
+    }
+    this.stroke = null;
+    this.afterStructure();
   }
 
   endStroke() {

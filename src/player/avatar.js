@@ -367,7 +367,12 @@ export class Avatar {
     let aLz = 0.06, aRz = -0.06, lean = speed * 0.08, headX = 0, spin = 0, hipsY = 0.72;
     let rootTilt = 0;
 
-    if (this.pose === 'sit' || this.pose === 'drive') {
+    if (this.pose === 'swim') {
+      // front crawl when moving, gentle paddling when still
+      const st = Math.sin(t * (speed > 0.1 ? 6 : 3));
+      aL = -1.6 + st * 1.4; aR = -1.6 - st * 1.4; aLz = 0.25; aRz = -0.25;
+      lL = st * 0.5; lR = -st * 0.5; lean = 0.25 + speed * 1.0; bodyY = Math.sin(t * 2.2) * 0.04; hipsY = 0.72;
+    } else if (this.pose === 'sit' || this.pose === 'drive') {
       lL = lR = -1.45; aL = aR = this.pose === 'drive' ? -0.9 : -0.25; hipsY = 0.5; lean = -0.05; bodyY = 0;
     } else if (this.pose === 'sleep') {
       lL = lR = 0; aL = aR = 0; hipsY = 0.72; rootTilt = -Math.PI / 2; bodyY = 0;

@@ -2,9 +2,10 @@
 // and how café progress lives inside the Blossom Bay save.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WORDS, WORD, RECIPES, RECIPE, RESTAURANTS, CHOP, LEVELS_PER, levelInfo, makeOrder, recipeWords, starsFor } from '../../cook/src/data.js';
+import { WORDS, WORD, RECIPES, RECIPE, RESTAURANTS, CHOP, PANTRY, kindOf, makeOrder, recipeWords } from '../../cook/src/data.js';
+import { COL } from '../../cook/src/models.js';
 import { stepPrompt, orderSentence, dishPhrase, translit, HOWTO, withEn, withRu } from '../../cook/src/text.js';
-import { cafeView, importKitchenSave, dishPay, dishXP, bbPrice, finishLevel, levelOpen, restaurantOpen, busyOpen, bestOpen, totalStars, levelKey, seeWords } from '../../cook/src/state.js';
+import { cafeView, importKitchenSave, dishPay, dishXP, bbPrice, seeWords } from '../../cook/src/state.js';
 import { newState as bbState, migrate } from '../../src/core/state.js';
 import { rng } from '../../src/engine/builder.js';
 
@@ -100,32 +101,6 @@ test('Russian in Latin letters', () => {
   assert.equal(translit('Щука, ёжик, юла, яблоко'), 'Schuka, yozhik, yula, yabloko');
 });
 
-test('levels ramp up: more guests, more dishes, less patience', () => {
-  for (const R of RESTAURANTS) {
-    let prev = null;
-    for (let L = 1; L <= LEVELS_PER; L++) {
-      const i = levelInfo(R.id, L);
-      assert.ok(i.recipes.length >= 1 && i.recipes.every((x) => R.recipes.includes(x)));
-      if (prev) {
-        assert.ok(i.customers >= prev.customers);
-        assert.ok(i.recipes.length >= prev.recipes.length);
-        assert.ok(i.patience <= prev.patience);
-      }
-      prev = i;
-    }
-    assert.equal(levelInfo(R.id, 1).recipes.length, 1, 'level 1 has one dish');
-    assert.equal(levelInfo(R.id, LEVELS_PER).recipes.length, R.recipes.length, 'last level has the full menu');
-    assert.equal(levelInfo(R.id, LEVELS_PER + 1).customers, 10, 'Busy Day');
-  }
-});
-
-test('stars from quality', () => {
-  assert.equal(starsFor(0.95), 3);
-  assert.equal(starsFor(0.8), 2);
-  assert.equal(starsFor(0.5), 1);
-  assert.equal(starsFor(0.2), 0);
-});
-
 test('money: better cooking pays more, prices fit the Blossom Bay economy', () => {
   const perfect = dishPay('pizza', 1), ok = dishPay('pizza', 0.5);
   assert.ok(perfect.total > ok.total);
@@ -136,44 +111,6 @@ test('money: better cooking pays more, prices fit the Blossom Bay economy', () =
   assert.ok(dishXP('cake', 1) > dishXP('pancakes', 0.5));
 });
 
-test('progress: levels, restaurants and Busy Day unlock in order', () => {
-  const bb = bbState();
-  const s = cafeView(bb);
-  assert.ok(levelOpen(s, 'cafe', 1));
-  assert.equal(bestOpen(s), 'cafe');
-  assert.ok(!levelOpen(s, 'cafe', 2));
-  assert.ok(!restaurantOpen(s, 'diner'));
-  const coins0 = bb.player.coins;
-  const r = finishLevel(s, 'cafe', 1, [1, 1, 0.9, 1]);
-  assert.equal(r.stars, 3);
-  assert.ok(r.bonus > 0);
-  assert.equal(bb.player.coins, coins0 + r.bonus, 'level bonus goes into the Blossom Bay purse');
-  assert.ok(levelOpen(s, 'cafe', 2));
-  // replaying with fewer stars keeps the best
-  finishLevel(s, 'cafe', 1, [0.5, 0.5]);
-  assert.equal(s.stars[levelKey('cafe', 1)], 3);
-  for (let L = 2; L <= LEVELS_PER; L++) finishLevel(s, 'cafe', L, [0.8, 0.8]);
-  assert.ok(busyOpen(s, 'cafe'));
-  assert.ok(restaurantOpen(s, 'diner'), `stars ${totalStars(s)}`);
-  assert.equal(bestOpen(s), 'pizza', '17 stars also open the Pizza Place');
-  // no level bonus for Busy Day, but best is recorded
-  const b = finishLevel(s, 'cafe', LEVELS_PER + 1, [1, 1, 1]);
-  assert.equal(b.bonus, 0);
-  assert.equal(s.busyBest.cafe, 3);
-  // 0 stars don't open the next level
-  const t = cafeView(bbState());
-  finishLevel(t, 'cafe', 1, [0.2, 0.1]);
-  assert.ok(!levelOpen(t, 'cafe', 2));
-});
-
-test('every restaurant can be unlocked with the stars available before it', () => {
-  let before = 0;
-  for (const R of RESTAURANTS) {
-    assert.ok(R.stars <= before * 0.75 || R.stars === 0, `${R.id} needs ${R.stars} of ${before} possible stars`);
-    before += LEVELS_PER * 3;
-  }
-});
-
 test('café progress is stored in the Blossom Bay save; coins are Blossom Bay coins', () => {
   const bb = bbState();
   const s = cafeView(bb);
@@ -182,12 +119,12 @@ test('café progress is stored in the Blossom Bay save; coins are Blossom Bay co
   assert.equal(bb.player.coins, c0 + 60);
   assert.equal(bb.stats.coinsEarned, 60);
   assert.equal(s.stats.earned, 60);
-  s.stars['cafe-1'] = 2;
+  s.creations.push({ name: 'Rainbow Soup', items: ['tomato'], n: 3 });
   seeWords(s, ['tomato', 'tomato']);
   const json = JSON.stringify(bb);
   assert.ok(!JSON.parse(json).cafe.coins, 'coins are not stored twice');
   const back = cafeView(migrate(JSON.parse(json)));
-  assert.equal(back.stars['cafe-1'], 2);
+  assert.equal(back.creations[0].name, 'Rainbow Soup');
   assert.equal(back.words.tomato, 2);
   assert.equal(back.coins, c0 + 60);
   assert.equal(back.settings.voice, true);
@@ -196,19 +133,30 @@ test('café progress is stored in the Blossom Bay save; coins are Blossom Bay co
 test('the old stand-alone Blossom Kitchen save moves in once', () => {
   const bb = bbState();
   const c0 = bb.player.coins;
-  const old = { coins: 120, houses: ['studio'], stars: { 'cafe-1': 3, 'cafe-2': 9 }, words: { egg: 2 }, tips: ['chop'], scriptChosen: true, intro: true, settings: { script: 'lat', voice: false } };
+  const old = { coins: 120, houses: ['studio'], words: { egg: 2 }, tips: ['chop'], scriptChosen: true, intro: true, settings: { script: 'lat', voice: false } };
   const r = importKitchenSave(bb, old);
   assert.equal(r.coins, 120 + 150, 'money plus the price of her stand-alone house');
   assert.equal(bb.player.coins, c0 + 270);
   const s = cafeView(bb);
-  assert.equal(s.stars['cafe-1'], 3);
-  assert.equal(s.stars['cafe-2'], 3, 'stars are capped at 3');
+  assert.equal(s.words.egg, 2);
   assert.equal(s.settings.script, 'lat');
   assert.equal(s.settings.voice, false);
   assert.ok(s.intro && s.scriptChosen && s.imported);
   assert.equal(importKitchenSave(bb, old).coins, 0, 'only once');
   assert.equal(bb.player.coins, c0 + 270);
   assert.equal(importKitchenSave(bbState(), null).coins, 0);
+});
+
+test('Free Kitchen: a big pantry, every food has a word, colour and kind', () => {
+  const ids = PANTRY.flatMap((c) => c.items);
+  assert.ok(ids.length >= 75, `only ${ids.length} foods`);
+  assert.equal(new Set(ids).size, ids.length, 'no food twice');
+  for (const id of ids) {
+    assert.ok(WORD[id], 'word for ' + id);
+    assert.ok(COL[id], 'colour for ' + id);
+    assert.ok(['whole', 'liquid', 'powder', 'small', 'chunk'].includes(kindOf(id)), id);
+    if (kindOf(id) === 'whole') assert.ok(CHOP[id], 'can chop ' + id);
+  }
 });
 
 test('Word Book: every recipe teaches its words', () => {
@@ -221,6 +169,7 @@ test('Word Book: every recipe teaches its words', () => {
   const reach = new Set();
   for (const r of RECIPES) for (const o of allOrders(r.id)) for (const st of o.steps) for (const x of stepPrompt(st).words || []) reach.add(x);
   for (const r of RECIPES) for (const x of recipeWords(r.id)) reach.add(x);
+  for (const x of PANTRY.flatMap((c) => c.items)) reach.add(x); // Free Kitchen
   const food = WORDS.filter((w) => ['food', 'dish', 'verb'].includes(w.cat));
   const missing = food.filter((w) => !reach.has(w.id)).map((w) => w.id);
   assert.ok(missing.length <= 12, 'unreachable words: ' + missing.join(', '));

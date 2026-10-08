@@ -209,20 +209,94 @@ try {
     await ev(() => window.__bb.jobs.stopDelivery(false));
   });
 
-  await test('buy a scooter and ride faster than walking', async () => {
-    await ev(() => { const g = window.__bb; g.state.player.coins += 1000; g.player.teleport(-50, undefined, 16, 0); g.vehicles.openShop(); });
-    await wait(400);
-    await ev(() => [...document.querySelectorAll('.panel .btn.sun')][0].click());
-    await wait(300);
-    await ev(() => document.querySelectorAll('.modal-bg').forEach((m) => m.remove()));
-    assert(await ev(() => window.__bb.state.owned.vehicles.includes('scooter')), 'not bought');
+  await test('free play: every ride is free; the motorbike is faster than walking', async () => {
+    assert(await ev(() => window.__bb.state.owned.vehicles.length >= 10), 'rides not all owned');
     await ev(() => { const g = window.__bb; g.player.teleport(-100, undefined, 24, Math.PI / 2); g.rig.yaw = -Math.PI / 2; g.vehicles.toggle(); });
+    await wait(300);
+    assert(await ev(() => document.querySelectorAll('.panel .card').length >= 10), 'ride picker not shown');
+    await ev(() => [...document.querySelectorAll('.panel .card')].find((c) => c.textContent.includes('Motorbike')).click());
+    await wait(200);
     const a = await ev(() => window.__bb.player.pos.x);
     await holdKey('KeyW', 1.5);
     const b = await ev(() => window.__bb.player.pos.x);
     assert(await ev(() => !!window.__bb.player.vehicle), 'not riding');
-    assert(b - a > 11, 'ride too slow: ' + (b - a));
+    assert(b - a > 14, 'ride too slow: ' + (b - a));
     await ev(() => window.__bb.vehicles.dismount());
+  });
+
+  await test('swim in the lake, then sail a boat on the sea', async () => {
+    // walk into the middle of the lake: she swims
+    await ev(() => { const g = window.__bb; g.player.teleport(96, undefined, -44); });
+    await waitGame(0.6);
+    const sw = await ev(() => { const p = window.__bb.player; return { swim: p.swimming, y: p.pos.y, pose: window.__bb.avatar.pose }; });
+    assert(sw.swim && sw.pose === 'swim' && sw.y < -1, 'not swimming ' + JSON.stringify(sw));
+    // a speed boat from the ride picker goes onto the water
+    await ev(() => { const g = window.__bb; g.vehicles.ride('motorboat'); });
+    await wait(200);
+    const boat = await ev(() => { const p = window.__bb.player; return { v: !!p.vehicle?.water, y: p.pos.y }; });
+    assert(boat.v, 'not in a boat ' + JSON.stringify(boat));
+    await ev(() => window.__bb.vehicles.dismount());
+    // from land, the boat asks where to sail, and the sea works too
+    await ev(() => { const g = window.__bb; g.player.teleport(-66, undefined, -60); g.vehicles.ride('yacht'); });
+    await wait(300);
+    assert(await ev(() => !!document.querySelector('.panel') && document.querySelector('.panel').textContent.includes('The sea')), 'no water choice');
+    await ev(() => [...document.querySelectorAll('.panel .btn')].find((b) => b.textContent.includes('The sea')).click());
+    await wait(300);
+    const sea = await ev(() => { const g = window.__bb; return { v: g.player.vehicle?.water, z: g.player.pos.z }; });
+    assert(sea.v && sea.z > 55, 'yacht not on the sea ' + JSON.stringify(sea));
+    const z0 = sea.z;
+    await ev(() => { window.__bb.rig.yaw = Math.PI; });
+    await holdKey('KeyW', 1.2);
+    const z1 = await ev(() => window.__bb.player.pos.z);
+    assert(z1 > z0 + 4, 'yacht did not sail ' + z0 + ' -> ' + z1);
+    await ev(() => window.__bb.vehicles.dismount());
+    await ev(() => { const g = window.__bb; g.player.teleport(-66, undefined, -60); });
+  });
+
+  await test('build mode: a pinch never lays floor, and the Erase tool removes it', async () => {
+    await page.click('.mbtn[data-id="build"]');
+    await wait(400);
+    const r = await ev(() => {
+      const g = window.__bb, B = g.house.build, hs = g.state.house, cv = g.renderer.domElement;
+      B.setTool('floor'); B.erase = false;
+      const t0 = Object.keys(hs.tiles).length;
+      // two fingers on the grass, spread apart (pinch zoom)
+      const fire = (type, id, x, y) => cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: x, clientY: y, pointerType: 'touch', bubbles: true, isPrimary: id === 1 }));
+      fire('pointerdown', 1, 300, 300); fire('pointerdown', 2, 360, 300);
+      fire('pointermove', 1, 280, 300); fire('pointermove', 2, 390, 300);
+      window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 280, clientY: 300, pointerType: 'touch' }));
+      window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, clientX: 390, clientY: 300, pointerType: 'touch' }));
+      const t1 = Object.keys(hs.tiles).length;
+      // lay one tile, then erase it with the Erase tool
+      B.startStroke({ x: 9, z: 27 }); B.endStroke();
+      const t2 = Object.keys(hs.tiles).length;
+      B.setTool('erase');
+      B.startStroke({ x: 9, z: 27 }); B.endStroke();
+      const t3 = Object.keys(hs.tiles).length;
+      return { t0, t1, t2, t3, eraseBtn: !!document.querySelector('.tool') && [...document.querySelectorAll('.tool')].some((t) => t.textContent.includes('Erase')) };
+    });
+    assert(r.t1 === r.t0, 'pinch laid floor ' + JSON.stringify(r));
+    assert(r.t2 === r.t0 + 1 && r.t3 === r.t0, 'erase failed ' + JSON.stringify(r));
+    assert(r.eraseBtn, 'no Erase tool');
+    await ev(() => document.querySelector('.build-done').click());
+    await wait(300);
+  });
+
+  await test('fishing is easy: cast, tap, reel', async () => {
+    await ev(() => { window.__bb.jobs.startJob('fishing'); });
+    await wait(400);
+    await ev(() => [...document.querySelectorAll('.mg .btn')].find((b) => b.textContent.includes('Cast')).click());
+    await page.waitForFunction(() => [...document.querySelectorAll('.mg .btn')].some((b) => b.textContent.includes('Catch')), null, { timeout: 30000 });
+    const press = () => ev(() => { const b = [...document.querySelectorAll('.mg .btn')].find((x) => /Catch|Reel/.test(x.textContent)); b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); });
+    await press();
+    for (let i = 0; i < 4; i++) { await wait(150); await press(); }
+    await wait(400);
+    const t = await ev(() => document.querySelector('.mg').textContent);
+    assert(/You caught/.test(t), 'no fish: ' + t.slice(0, 120));
+    await ev(() => [...document.querySelectorAll('.mg .btn')].find((b) => /Done|Finish|✕|Close/.test(b.textContent))?.click() || document.querySelector('.mg .x')?.click());
+    await wait(300);
+    await ev(() => document.querySelectorAll('.mg').forEach((m) => m.remove()));
+    await ev(() => { window.__bb.mode = 'play'; window.__bb.hud.setVisible(true); });
   });
 
   await test('hot-air balloon flies to Sky Island and back', async () => {

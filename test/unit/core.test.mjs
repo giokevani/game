@@ -49,3 +49,31 @@ test('backup code round trip (with emoji names)', () => {
   assert.equal(back.player.coins, 4242);
   assert.throws(() => importCode('hello'));
 });
+
+test('free play: no levels or prices, except clothes', async () => {
+  const { applyFreePlayData, applyFreePlayState } = await import('../../src/core/freeplay.js');
+  const { FURNITURE } = await import('../../src/data/furniture.js');
+  const { FLOORS, WALLPAPERS, EXTERIORS, OPENINGS, PRICES } = await import('../../src/data/houseStyles.js');
+  const { PLOT_PRICES } = await import('../../src/house/model.js');
+  const { EGGS, PET_ACC } = await import('../../src/data/pets.js');
+  const { SEEDS, JOBS } = await import('../../src/data/jobs.js');
+  const { AVATAR_ITEMS } = await import('../../src/data/avatar.js');
+  const { QUESTS } = await import('../../src/data/quests.js');
+  const clothesBefore = AVATAR_ITEMS.filter((i) => i.price > 0).length;
+  applyFreePlayData();
+  for (const list of [FURNITURE, FLOORS, WALLPAPERS, EXTERIORS, OPENINGS, EGGS, PET_ACC]) for (const x of list) {
+    assert.equal(x.price, 0, x.id);
+    assert.ok(!x.unlock && (x.lvl || 1) === 1, x.id);
+  }
+  assert.ok(Object.values(PRICES).every((p) => p === 0));
+  assert.ok(PLOT_PRICES.every((p) => p === 0));
+  assert.ok(SEEDS.every((s) => s.cost === 0 && s.grow <= 90), 'seeds free and fast');
+  assert.ok(JOBS.every((j) => !j.lvl));
+  assert.ok(QUESTS.every((q) => q.lvl === 1));
+  assert.equal(AVATAR_ITEMS.filter((i) => i.price > 0).length, clothesBefore, 'clothes still cost coins');
+  assert.ok(AVATAR_ITEMS.every((i) => !i.level));
+  const st = newState();
+  applyFreePlayState(st, ['car', 'yacht']);
+  assert.ok(st.unlocks.cave && st.unlocks.sky);
+  assert.deepEqual(st.owned.vehicles, ['car', 'yacht']);
+});

@@ -1,6 +1,9 @@
 import './style.css';
 import { Game } from './game.js';
 import { h } from './ui/ui.js';
+import { applyFreePlayData } from './core/freeplay.js';
+
+applyFreePlayData();
 
 const fill = document.getElementById('load-fill');
 const text = document.getElementById('load-text');

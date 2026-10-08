@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { terrainHeight } from '../world/terrain.js';
+import { WATER_Y } from '../world/terrain.js';
 import { WORLD } from '../data/map.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -22,6 +22,7 @@ export class Player {
     this.lastSafe = this.pos.clone();
     this.onLand = null;
     this.distance = 0;
+    this.swimming = false;
   }
 
   get object() { return this.avatar.root; }
@@ -67,7 +68,7 @@ export class Player {
     const rgtX = Math.cos(camYaw), rgtZ = -Math.sin(camYaw);
     let dx = fwdX * -m.y + rgtX * m.x;
     let dz = fwdZ * -m.y + rgtZ * m.x;
-    const vmax = this.vehicle ? this.vehicle.speed : this.speed;
+    const vmax = this.vehicle ? this.vehicle.speed : this.swimming ? 4.2 : this.speed;
     const accel = this.grounded ? 14 : 5;
     const tx = dx * vmax, tz = dz * vmax;
     this.vel.x += (tx - this.vel.x) * Math.min(1, accel * dt);
@@ -78,7 +79,7 @@ export class Player {
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       this.facing += diff * Math.min(1, (this.vehicle ? 6 : 12) * dt);
     }
-    if (!this.frozen && input.consumeJump() && this.grounded && !this.vehicle) {
+    if (!this.frozen && input.consumeJump() && this.grounded && !this.vehicle && !this.swimming) {
       this.vel.y = this.jumpV;
       this.grounded = false;
       this.onJump?.();
@@ -88,12 +89,30 @@ export class Player {
     const prevX = this.pos.x, prevZ = this.pos.z;
     this.pos.x += this.vel.x * dt;
     this.pos.z += this.vel.z * dt;
-    this.world.resolve(this.pos, this.vehicle ? 0.9 : this.radius, this.pos.y);
-    // keep out of deep water and inside the world
-    const deep = terrainHeight(this.pos.x, this.pos.z) < -0.95 && this.world.groundAt(this.pos.x, this.pos.z, this.pos.y) < -0.5;
-    if (deep) { this.pos.x = prevX; this.pos.z = prevZ; this.vel.x *= -0.2; this.vel.z *= -0.2; }
+    this.world.resolve(this.pos, this.vehicle ? (this.vehicle.water ? 1.2 : 0.9) : this.radius, this.pos.y);
+    // water: on foot she swims, boats stay on water, cars and bikes stay on land
+    const depth = WATER_Y - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
+    const boat = this.vehicle?.water;
+    if ((boat && depth < 0.6) || (this.vehicle && !boat && depth > 0.5)) { this.pos.x = prevX; this.pos.z = prevZ; this.vel.x *= -0.2; this.vel.z *= -0.2; }
     this.pos.x = Math.max(WORLD.minX, Math.min(WORLD.maxX, this.pos.x));
     this.pos.z = Math.max(WORLD.minZ, Math.min(WORLD.maxZ, this.pos.z));
+    const deepNow = WATER_Y - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
+    this.swimming = !this.vehicle && !this.seat && deepNow > 1.0 && this.pos.y < WATER_Y + 1.5;
+    if (boat || this.swimming) {
+      // float at the surface (swimmers are mostly under water, head above)
+      const ty = boat ? WATER_Y : WATER_Y - 1.15;
+      this.pos.y += (ty - this.pos.y) * Math.min(1, dt * 8);
+      this.vel.y = 0;
+      this.grounded = true;
+      if (this.swimming && av.pose !== 'swim') av.pose = 'swim';
+      const hs = Math.hypot(this.vel.x, this.vel.z);
+      this.distance += hs * dt;
+      this.moveAmt = hs / this.speed;
+      av.update(dt, this.vehicle ? 0 : Math.min(1, hs / 4.2), false);
+      this.sync();
+      return;
+    }
+    if (av.pose === 'swim') av.pose = 'stand';
 
     this.pos.y += this.vel.y * dt;
     const g = this.world.groundAt(this.pos.x, this.pos.z, this.pos.y);
@@ -182,7 +201,7 @@ export class CameraRig {
         }
       }
     }
-    const gy = this.world.groundAt(pos.x, pos.z, pos.y) + 0.6;
+    const gy = Math.max(this.world.groundAt(pos.x, pos.z, pos.y) + 0.6, WATER_Y + 0.5);
     if (pos.y < gy) pos.y = gy;
     this.camera.position.copy(pos);
     this.camera.lookAt(this.target);

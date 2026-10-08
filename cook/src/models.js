@@ -18,6 +18,12 @@ export const COL = {
   tomato: '#e8453c', lettuce: '#7cc45a', onion: '#f3e6d0', cucumber: '#5fae5a', avocado: '#9fd06a', salmon: '#ff8a5a', pepper: '#4fbf5a',
   mushroom: '#e8d6c0', olive: '#3a3a2a', sausage: '#c0504a', tofu: '#fbf6ea', potato: '#ffe8a3', carrot: '#ff8a2e', lemon: '#ffe04a',
   sprinkles: '#ff6fb5', cherry: '#e8203a', salt: '#ffffff', nori: '#1f3a2a', candle: '#8fd0ff', bread: '#e0a868', dough: '#f6ddb0',
+  grapes: '#8a4ab8', kiwi: '#7ccf4a', mango: '#ffb03a', pineapple: '#ffe066', peach: '#ffa98a', pear: '#b8d84a', watermelon: '#ff5a6a',
+  coconut: '#fffaf0', raspberry: '#e8305a', broccoli: '#3f9a3a', corn: '#ffd84a', peas: '#7cc84a', garlic: '#f6f0e4', eggplant: '#6a3a8a',
+  spinach: '#3f8a3a', beans: '#a0402a', yogurt: '#fffaf2', honey: '#f5b82a', chicken: '#e8c090', ham: '#ff9aa8', shrimp: '#ff9a7a', tuna: '#c8506a',
+  noodles: '#ffe6a0', tortilla: '#f0d8a0', croissant: '#e8a850', cereal: '#e8b060', marshmallow: '#fff6fa', candy: '#ff6fb5', caramel: '#d88a2a',
+  gummy: '#ff5a5a', juice: '#ffa830', water: '#bfe6ff', tea: '#c88a40', cocoa: '#7a4a2a', cinnamon: '#a0602a', basil: '#3f9a3a', ice: '#e8f8ff',
+  bun: '#e8a860', patty: '#7a4a2e', icecream: '#fff4e2',
 };
 export const col = (id) => COL[id] || '#cccccc';
 

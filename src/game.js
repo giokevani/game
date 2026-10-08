@@ -141,11 +141,8 @@ export class Game {
       UI.floaty(parts.join('  '), p.x - 40, p.y);
     }
     this.emit('coins', coins, reason);
-    if (up) {
-      this.audio?.play('levelup');
-      UI.celebrate(`Level ${up}!`, 'New things unlocked in the shops ✨');
-      this.emit('levelup', up);
-    } else if (coins) this.audio?.play('coin');
+    if (up) this.emit('levelup', up); // free play: levels unlock nothing, so no fanfare
+    if (coins) this.audio?.play('coin');
     return up;
   }
 

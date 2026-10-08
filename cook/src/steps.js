@@ -204,6 +204,8 @@ export class Kitchen {
     if (kind === 'blender') { g.push(MD.blender()); fillY = 0.14; r = 0.085; top = 0.4; }
     else if (kind === 'pot') { const s = MD.stove(); const p = MD.pot(); p.position.y = 0.03; g.push(s, p); fillY = 0.06; r = 0.165; top = 0.24; }
     else if (kind === 'pan') { const s = MD.stove(); const p = MD.pan(); p.position.y = 0.03; g.push(s, p); fillY = 0.05; r = 0.18; top = 0.1; }
+    else if (kind === 'plate') { g.push(MD.plate(0.26)); fillY = 0.022; r = 0.17; top = 0.06; }
+    else if (kind === 'glass') { g.push(MD.glass(0.24, 0.085)); fillY = 0.014; r = 0.075; top = 0.25; }
     else { g.push(MD.bowl('#ffffff', 0.2, 0.13)); fillY = 0.03; r = 0.17; top = 0.14; }
     const fill = MD.fill(r, '#ffffff');
     fill.material.userData.own = true;
@@ -212,7 +214,7 @@ export class Kitchen {
     const blobs = new THREE.Group();
     blobs.position.y = fillY;
     this.setDish('cont:' + kind, ...g, fill, blobs);
-    this.cont = { kind, fill, blobs, r, top, n: 0 };
+    this.cont = { kind, fill, blobs, r, top, n: 0, fillY };
     return this.cont;
   }
   addToContainer(id, color) {

@@ -2,7 +2,7 @@
 // The café code (cook/src) loads the first time she goes in, so the town
 // starts as fast as before.
 import { BUILDINGS } from '../data/map.js';
-import { toast } from '../ui/ui.js';
+import { toast, modal, h, click } from '../ui/ui.js';
 import { importKitchenSave, cafeView, OLD_SAVE_KEY } from '../../cook/src/state.js';
 
 export const CAFE = BUILDINGS.find((b) => b.id === 'cafe');
@@ -14,7 +14,7 @@ export class CafeSystem {
     game.cafeSys = this;
     const st = game.state;
     cafeView(st);
-    // the stand-alone Blossom Kitchen save moves in once (stars, words, money)
+    // the stand-alone Blossom Kitchen save moves in once (words, settings, money)
     let moved = 0;
     try {
       const raw = window.localStorage.getItem(OLD_SAVE_KEY);
@@ -26,13 +26,32 @@ export class CafeSystem {
     const wantCafe = new URLSearchParams(location.search).has('cafe');
     game.on('start', () => {
       if (moved) setTimeout(() => toast(`Your Blossom Kitchen money moved here: +${moved} 🪙`, { icon: '🧁', kind: 'gold', time: 5000 }), 1500);
-      if (!st.player.name) return; // brand-new player: make the character first
+      if (!st.player.name) { st.newsFree = true; return; } // brand-new player: make the character first (no 'what's new')
       if (!st.cafe.announced) {
         st.cafe.announced = true;
         setTimeout(() => toast('New! Blossom Kitchen café on Main Street. Cook there to earn coins!', { icon: '🍳', kind: 'pink', time: 6000 }), 2500);
       }
+      if (!st.newsFree && !wantCafe) { st.newsFree = true; setTimeout(() => this.news(), 1200); }
       if (wantCafe) { this.goTo(); this.open(); }
     });
+  }
+
+  // what changed in the free-play update (shown once)
+  news() {
+    const rows = [
+      ['🆓', 'Everything is free now! Only clothes cost coins.', 'Теперь всё бесплатно! Монетки нужны только для одежды.'],
+      ['🚗', 'Tap 🚗 to ride cars, a motorbike and boats.', 'Нажми 🚗 — машины, мотоцикл и лодки.'],
+      ['🏊', 'Walk into the sea or the lake to swim.', 'Заходи в море или в озеро и плавай.'],
+      ['✨', 'Free Kitchen in the café: mix anything you like!', 'В кафе есть свободная кухня: смешивай что хочешь!'],
+      ['🌱', 'Plants grow super fast, and fishing is easy.', 'Растения растут очень быстро, а рыбалка стала простой.'],
+      ['🧽', 'The Erase tool in 🔨 Build removes extra floor.', 'Ластик 🧽 в режиме 🔨 Build убирает лишний пол.'],
+    ];
+    modal('🎉 New in Blossom Bay!', (b, close) => {
+      const l = h('div', { class: 'list' });
+      for (const [ic, en, r] of rows) l.appendChild(h('div', { class: 'li' }, h('div', { class: 'big-ico' }, ic), h('div', {}, h('div', { class: 't' }, en), h('div', { class: 's' }, r))));
+      b.appendChild(l);
+      b.appendChild(h('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '10px' } }, h('button', { class: 'btn mint big', onclick: () => { click(); close(); } }, 'Yay! 🎉')));
+    }, { narrow: true });
   }
 
   // fast travel to the café door

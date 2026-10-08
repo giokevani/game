@@ -263,7 +263,8 @@ export function fishingGame(lvl, o) {
     let state = 'idle', fish = null, raf = 0, holding = false;
     let fx = 0.5, fv = 0, zx = 0.3, zv = 0, meter = 0.3, target = 0.5, tLast = 0, biteTimer = 0;
     const zoneW = 0.2 + lvl * 0.025;
-    const press = (e) => { e.preventDefault(); holding = true; if (state === 'bite') hook(); };
+    // easy fishing: the fish waits for you, then tap Reel! a few times
+    const press = (e) => { e.preventDefault(); holding = true; if (state === 'bite') hook(); else if (state === 'reel') reelTap(); };
     const release = () => { holding = false; };
     btn.addEventListener('pointerdown', press);
     btn.addEventListener('pointerup', release);
@@ -274,15 +275,14 @@ export function fishingGame(lvl, o) {
       btn.textContent = 'Waiting…';
       msg.textContent = 'Shh… wait for a bite';
       bob.textContent = '🟠';
-      const wait = 1500 + Math.random() * 3000;
+      const wait = 800 + Math.random() * 1400;
       biteTimer = setTimeout(() => {
         if (over) return;
         state = 'bite';
-        msg.textContent = '❗ BITE! Tap now!';
+        msg.textContent = '❗ A fish! Tap the button!';
         bob.style.transform = 'translateY(12px)';
-        btn.textContent = 'Hook it!';
+        btn.textContent = 'Catch it! 🐟';
         o.sfx?.('pop');
-        biteTimer = setTimeout(() => { if (state === 'bite') { msg.textContent = 'Too slow — it swam away! 🌊'; reset(); } }, 1300);
       }, wait);
     }
     function hook() {
@@ -291,10 +291,10 @@ export function fishingGame(lvl, o) {
       state = 'reel';
       bob.style.transform = '';
       bob.textContent = '🌊';
-      msg.textContent = 'Hold the button to move the green zone onto the fish!';
-      btn.textContent = 'Hold to reel';
+      msg.textContent = 'Tap Reel! to pull it in!';
+      btn.textContent = 'Reel! 🎣';
       cv.style.display = 'block';
-      fx = 0.5; fv = 0; zx = 0.4; zv = 0; meter = 0.3; target = Math.random();
+      fx = 0.5; fv = 0; zx = 0.4; zv = 0; meter = 0.1; target = Math.random();
       tLast = performance.now();
       loop();
     }
@@ -308,17 +308,16 @@ export function fishingGame(lvl, o) {
       fv += (target - fx) * dt * 6 * fish.speed;
       fv *= 1 - dt * 3;
       fx = Math.max(0.02, Math.min(0.98, fx + fv * dt));
-      // zone: hold = move right, release = drift left
-      zv += (holding ? 2.2 : -1.8) * dt;
-      zv *= 1 - dt * 2.5;
-      zx += zv * dt;
-      if (zx < 0) { zx = 0; zv = 0; }
-      if (zx > 1 - zoneW) { zx = 1 - zoneW; zv = 0; }
-      const inside = fx > zx && fx < zx + zoneW;
-      meter += (inside ? 0.32 : -0.22 * (0.7 + fish.speed * 0.3)) * dt;
-      draw(inside);
+      // the green net follows the fish by itself; holding the button reels slowly too
+      zx = Math.max(0, Math.min(1 - zoneW, fx - zoneW / 2));
+      if (holding) meter += dt * 0.35;
+      draw(true);
       if (meter >= 1) { cancelAnimationFrame(raf); win(); }
-      else if (meter <= 0) { cancelAnimationFrame(raf); msg.textContent = `The ${fish.rar === 'common' ? 'fish' : 'big one'} got away! 😮`; reset(); }
+    }
+    function reelTap() {
+      meter += 0.3;
+      o.sfx?.('pick');
+      if (meter >= 1) { cancelAnimationFrame(raf); win(); }
     }
     function draw(inside) {
       const x = cv.getContext('2d');

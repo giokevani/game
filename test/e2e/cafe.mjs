@@ -96,9 +96,14 @@ try {
   ok('walking in hides the town and the town HUD', await G(() => window.__bb.mode === 'cafe' && !window.__bb.world.ground?.visible));
   await shot('02-script');
   await clickText('Русские буквы');
-  for (let i = 0; i < 4; i++) { await page.locator('.dialog .opts button').click(); await page.waitForTimeout(200); }
-  await waitG(() => [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Start')));
-  await clickText('Start');
+  for (let i = 0; i < 5; i++) { await page.locator('.dialog .opts button').click(); await page.waitForTimeout(200); }
+  await waitG(() => document.querySelector('.cafe-menu'));
+  await shot('02b-menu');
+  ok('café menu has Free Kitchen and guests, no levels', await G(() => { const t = document.querySelector('.panel').textContent; return t.includes('Free Kitchen') && t.includes('Serve guests') && !/Level|★/.test(t); }));
+  await clickText('Serve guests');
+  await waitG(() => document.querySelectorAll('.rest').length === 5);
+  ok('every menu is open', await G(() => ![...document.querySelectorAll('.rest')].some((r) => r.classList.contains('locked'))));
+  await page.locator('.rest', { hasText: 'Pancake' }).click();
   await waitG(() => { const b = document.querySelector('.bubble'); return b && b.offsetParent && b.parentElement.style.display !== 'none'; }, null, 60000);
   await page.waitForTimeout(500);
   await shot('03-service');
@@ -125,25 +130,62 @@ try {
   const coins1 = await G(() => window.__bb.state.player.coins);
   ok('the dish pays Blossom Bay coins', coins1 > coins0 + 30, `${coins0} -> ${coins1}`);
 
-  // ---------- finish the level quickly ----------
-  await G(() => {
-    const g = window.__bb.cafe;
-    g.timeScale = 4;
-    window.__auto = setInterval(() => {
-      if (document.querySelector('.order-say')) [...document.querySelectorAll('button')].find((b) => b.textContent.includes("Let's cook"))?.click();
-      else if (!g.cooking) { const c = g.customers.find((x) => x.state === 'wait'); if (c) g.tapCustomer(c); }
-      g.kitchen.finishNow?.();
-    }, 300);
-  });
-  await waitG(() => document.querySelector('.big-stars'), null, 240000);
-  await G(() => clearInterval(window.__auto));
-  await page.waitForTimeout(800);
-  await shot('05-results');
-  ok('level 1 earns stars', (await G(() => window.__bb.state.cafe.stars['cafe-1'] || 0)) >= 1);
+  // ---------- Free Kitchen: any food, as much as she likes ----------
+  await page.locator('.cafe-ui .mbtn').click();
+  await clickText('Café menu');
+  await waitG(() => document.querySelector('.cafe-menu'));
+  await clickText('Free Kitchen');
+  await waitG(() => document.querySelectorAll('.p-item').length > 10);
+  const coinsF = await G(() => window.__bb.state.player.coins);
+  await page.locator('.p-tab', { hasText: 'Vegetables' }).click();
+  await page.locator('.p-item[data-id="tomato"]').click();
+  await page.locator('.p-item[data-id="corn"]').click();
+  await page.locator('.p-tab', { hasText: 'Milk' }).click();
+  for (const id of ['milk', 'egg', 'cheese', 'cheese']) await page.locator(`.p-item[data-id="${id}"]`).click();
+  await page.locator('.p-tab', { hasText: 'Sweets' }).click();
+  for (let i = 0; i < 20; i++) await page.locator('.p-item[data-id="sprinkles"]').click();
+  await page.waitForTimeout(500);
+  await shot('05-free-kitchen');
+  const n = await G(() => window.__bb.cafe.free.items.length);
+  ok('Free Kitchen takes lots of ingredients', n === 26, `${n} items`);
+  await page.locator('.free-btn', { hasText: 'Undo' }).click();
+  ok('undo removes the last one', (await G(() => window.__bb.cafe.free.items.length)) === 25);
+  // chop the tomato with a real swipe, then mix and cook
+  await page.locator('.free-btn', { hasText: 'Chop' }).click();
+  await waitG(() => window.__bb.cafe.kitchen.finishNow);
+  const lines = await G(() => window.__bb.cafe.kitchen.props.children.filter((o) => o.isMesh && o.renderOrder === 20).map((o) => ({ x: o.position.x, y: o.position.y })));
+  for (const L of lines) {
+    const a = await G((v) => window.__bb.cafe.kitchen.screenOf(v), { x: L.x, y: L.y, z: -0.16 }), b = await G((v) => window.__bb.cafe.kitchen.screenOf(v), { x: L.x, y: L.y, z: 0.16 });
+    await drag([a, b], 8);
+    await page.waitForTimeout(350);
+  }
+  await waitG(() => !window.__bb.cafe.free.busy, null, 30000);
+  ok('chopping puts tomato slices into the dish', await G(() => window.__bb.cafe.free.actions.has('chop')));
+  await page.locator('.free-btn', { hasText: 'Mix' }).click();
+  await waitG(() => window.__bb.cafe.kitchen.finishNow);
+  await G(() => window.__bb.cafe.kitchen.finishNow());
+  await waitG(() => !window.__bb.cafe.free.busy, null, 30000);
+  await page.locator('.free-btn', { hasText: 'Pot' }).click();
+  await page.locator('.free-btn', { hasText: 'Cook' }).click();
+  await waitG(() => window.__bb.cafe.kitchen.finishNow);
+  await G(() => window.__bb.cafe.kitchen.finishNow());
+  await waitG(() => !window.__bb.cafe.free.busy, null, 30000);
+  await shot('06-cooked');
+  await page.locator('.free-btn', { hasText: 'Done' }).click();
+  await page.waitForSelector('.name-input');
+  await page.fill('.name-input', 'Rainbow Soup');
+  await clickText('OK');
+  await waitG(() => [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Give it to a guest')));
+  await clickText('Give it to a guest');
+  await waitG((c) => window.__bb.state.player.coins > c, coinsF, 90000);
+  ok('a guest pays for her own dish', true, `${coinsF} -> ${await G(() => window.__bb.state.player.coins)}`);
+  ok('her dish is saved in My dishes', await G(() => window.__bb.state.cafe.creations[0]?.name === 'Rainbow Soup'));
+  await page.waitForTimeout(2500);
 
   // ---------- leave the café with the money ----------
   const coinsIn = await G(() => window.__bb.state.player.coins);
-  await clickText('Leave');
+  await page.locator('.cafe-ui .mbtn').click();
+  await clickText('Leave café');
   await page.waitForTimeout(1200);
   const out = await G(() => { const g = window.__bb; return { mode: g.mode, coins: g.state.player.coins, ground: g.world.ground?.visible !== false, hud: !document.querySelector('.cafe-ui:not(.hide)') }; });
   ok('leaving brings her back to town with her coins', out.mode === 'play' && out.coins === coinsIn && out.ground && out.hud, JSON.stringify(out));
@@ -186,15 +228,15 @@ try {
 
   // ---------- save, reload, and the ?cafe link ----------
   await G(() => window.__bb.save());
-  const before = await G(() => ({ coins: window.__bb.state.player.coins, stars: window.__bb.state.cafe.stars['cafe-1'] }));
+  const before = await G(() => ({ coins: window.__bb.state.player.coins, dishes: window.__bb.state.cafe.creations.length }));
   await page.goto(srv.url + 'cook/', { waitUntil: 'load' });
   await page.waitForURL(/\?cafe=1/, { timeout: 20000 });
   ok('old /cook/ link leads to the café in Blossom Bay', page.url().includes('?cafe=1'), page.url());
   await page.waitForSelector('#loading .tap-start', { timeout: 90000 });
   await page.click('#loading .tap-start');
   await waitG(() => window.__bb.cafe?.active, null, 60000);
-  const after = await G(() => ({ coins: window.__bb.state.player.coins, stars: window.__bb.state.cafe.stars['cafe-1'] }));
-  ok('progress survives reload and ?cafe opens the café', after.coins === before.coins && after.stars === before.stars, JSON.stringify({ before, after }));
+  const after = await G(() => ({ coins: window.__bb.state.player.coins, dishes: window.__bb.state.cafe.creations.length }));
+  ok('progress survives reload and ?cafe opens the café', after.coins === before.coins && after.dishes === before.dishes, JSON.stringify({ before, after }));
   await page.waitForTimeout(800);
   await shot('08-menu');
   await clickText('Leave café');
@@ -204,11 +246,11 @@ try {
   // ---------- the old stand-alone save moves in once ----------
   await page.close(); // one game at a time keeps the software renderer fast enough
   const ctx2 = await browser.newContext({ viewport: { width: 812, height: 375 }, isMobile: true, hasTouch: true });
-  await ctx2.addInitScript(() => { try { if (location.protocol.startsWith('http') && !localStorage.getItem('blossombay.save.v1')) localStorage.setItem('blossomkitchen-v1', JSON.stringify({ coins: 120, houses: ['studio'], stars: { 'cafe-1': 2 }, words: { egg: 1 }, intro: true, scriptChosen: true, settings: { script: 'lat' } })); } catch { /* about:blank */ } });
+  await ctx2.addInitScript(() => { try { if (location.protocol.startsWith('http') && !localStorage.getItem('blossombay.save.v1')) localStorage.setItem('blossomkitchen-v1', JSON.stringify({ coins: 120, houses: ['studio'], words: { egg: 1 }, intro: true, scriptChosen: true, settings: { script: 'lat' } })); } catch { /* about:blank */ } });
   const p2 = await ctx2.newPage();
   await bootNewPlayer(p2, srv.url);
-  const moved = await p2.evaluate(() => ({ coins: window.__bb.state.player.coins, stars: window.__bb.state.cafe.stars['cafe-1'], script: window.__bb.state.cafe.settings.script }));
-  ok('stand-alone Blossom Kitchen money and stars move into Blossom Bay', moved.coins === 150 + 270 && moved.stars === 2 && moved.script === 'lat', JSON.stringify(moved));
+  const moved = await p2.evaluate(() => ({ coins: window.__bb.state.player.coins, words: window.__bb.state.cafe.words.egg, script: window.__bb.state.cafe.settings.script }));
+  ok('stand-alone Blossom Kitchen money and words move into Blossom Bay', moved.coins === 150 + 270 && moved.words === 1 && moved.script === 'lat', JSON.stringify(moved));
   await ctx2.close();
 } catch (e) {
   ok('no exception', false, String(e.stack || e));

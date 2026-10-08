@@ -1,21 +1,31 @@
-// Rides from Zoom Rides and the hot-air balloon to Sky Island.
+// Rides (all free): bikes, motorbike and cars on land, three boats on the
+// sea and the lake, plus the hot-air balloon to Sky Island.
 import * as THREE from 'three';
-import { Builder, shade } from '../engine/builder.js';
+import { Builder, Geo, shade } from '../engine/builder.js';
 import { M } from '../engine/materials.js';
 import { balloon as balloonModel } from '../world/buildings.js';
 import { h, modal, toast, click, celebrate, fmt, root } from '../ui/ui.js';
 import { spend, level as levelOf } from '../core/state.js';
-import { BUILDINGS, BALLOON, SKY_ISLAND } from '../data/map.js';
+import { BUILDINGS, BALLOON, SKY_ISLAND, POND, WORLD, shoreZ } from '../data/map.js';
+import { WATER_Y } from '../world/terrain.js';
+import { applyFreePlayState } from '../core/freeplay.js';
 import { renderObject, lazyThumb } from '../house/thumbs.js';
 import { ORIGIN } from '../house/view.js';
 import * as HM from '../house/model.js';
 
 export const VEHICLES = [
-  { id: 'scooter', name: 'Pastel Scooter', icon: '🛴', price: 400, lvl: 3, speed: 11.5, seatY: 0.25, stand: true },
-  { id: 'bike', name: 'Flower Bike', icon: '🚲', price: 1100, lvl: 5, speed: 13 , seatY: 0.55 },
-  { id: 'cart', name: 'Golf Cart', icon: '🛺', price: 2600, lvl: 8, speed: 15, seatY: 0.45 },
-  { id: 'car', name: 'Bubble Car', icon: '🚗', price: 6000, lvl: 12, speed: 18, seatY: 0.35 },
+  { id: 'scooter', name: 'Pastel Scooter', icon: '🛴', price: 0, lvl: 1, speed: 11.5, seatY: 0.25, stand: true },
+  { id: 'bike', name: 'Flower Bike', icon: '🚲', price: 0, lvl: 1, speed: 13, seatY: 0.55 },
+  { id: 'motorbike', name: 'Zoom Motorbike', icon: '🏍️', price: 0, lvl: 1, speed: 21, seatY: 0.55 },
+  { id: 'cart', name: 'Golf Cart', icon: '🛺', price: 0, lvl: 1, speed: 15, seatY: 0.45 },
+  { id: 'car', name: 'Bubble Car', icon: '🚗', price: 0, lvl: 1, speed: 18, seatY: 0.35 },
+  { id: 'jeep', name: 'Beach Jeep', icon: '🚙', price: 0, lvl: 1, speed: 19, seatY: 0.6 },
+  { id: 'sports', name: 'Sports Car', icon: '🏎️', price: 0, lvl: 1, speed: 25, seatY: 0.22 },
+  { id: 'rowboat', name: 'Row Boat', icon: '🚣', price: 0, lvl: 1, speed: 6.5, seatY: 0.25, water: true },
+  { id: 'motorboat', name: 'Speed Boat', icon: '🚤', price: 0, lvl: 1, speed: 17, seatY: 0.45, water: true },
+  { id: 'yacht', name: 'Little Yacht', icon: '🛥️', price: 0, lvl: 1, speed: 11, seatY: 0.95, water: true },
 ];
+export const VEHICLE = Object.fromEntries(VEHICLES.map((v) => [v.id, v]));
 const VCOLORS = ['#ff8fc0', '#7fc6ff', '#ffd45e', '#6fd6b3', '#b58cff', '#ffffff', '#ff6f6f'];
 
 function wheel(b, x, y, z, r = 0.22, w = 0.12) {
@@ -50,6 +60,58 @@ export function vehicleModel(id, col) {
     b.box(1.45, 0.1, 0.1, col, 0, 1.76, 0.95, { r: 0.03 });
     b.cyl(0.18, 0.18, 0.04, '#3a3446', 0, 0.9, 0.55, { rx: -1.0, seg: 12, center: true });
     wheels.push([-0.62, 0.22, 0.65, 0.22], [0.62, 0.22, 0.65, 0.22], [-0.62, 0.22, -0.65, 0.22], [0.62, 0.22, -0.65, 0.22]);
+  } else if (id === 'motorbike') {
+    b.box(0.36, 0.34, 1.2, col, 0, 0.42, 0, { r: 0.14 });
+    b.box(0.3, 0.12, 0.6, '#3a3446', 0, 0.76, -0.2, { r: 0.06 });
+    b.box(0.4, 0.3, 0.3, shade(col, 0.85), 0, 0.62, 0.42, { r: 0.1 });
+    b.cyl(0.035, 0.035, 0.6, '#c9c3d1', 0, 0.55, 0.62, { rx: -0.35, seg: 6 });
+    b.box(0.72, 0.05, 0.05, '#3a3446', 0, 1.05, 0.7, { r: 0.02 });
+    b.sphere(0.1, '#fff7c2', 0, 0.82, 0.68, { sz: 0.5 });
+    b.cyl(0.05, 0.06, 0.5, '#c9c3d1', 0.2, 0.3, -0.45, { rx: Math.PI / 2 - 0.2, seg: 8 });
+    wheels.push([0, 0.3, 0.62, 0.3], [0, 0.3, -0.58, 0.3]);
+  } else if (id === 'jeep') {
+    b.box(1.6, 0.6, 2.6, col, 0, 0.35, 0, { r: 0.12 });
+    b.box(1.5, 0.08, 1.5, shade(col, 0.8), 0, 0.95, -0.4, { r: 0.04 });
+    for (const x of [-0.7, 0.7]) for (const z of [-1.1, 0.3]) b.cyl(0.04, 0.04, 0.9, '#3a3446', x, 0.95, z, { seg: 6 });
+    b.box(1.55, 0.06, 1.5, '#3a3446', 0, 1.82, -0.4, { r: 0.03 });
+    b.box(1.4, 0.45, 0.06, '#cfefff', 0, 1.2, 0.35, { r: 0.04, rx: -0.15 });
+    for (const s of [-1, 1]) b.sphere(0.13, '#fff7c2', s * 0.55, 0.7, 1.3, { sz: 0.4 });
+    b.cyl(0.32, 0.32, 0.2, '#3a3446', 0, 0.75, -1.35, { rx: Math.PI / 2, seg: 14, center: true });
+    wheels.push([-0.8, 0.36, 0.9, 0.36], [0.8, 0.36, 0.9, 0.36], [-0.8, 0.36, -0.9, 0.36], [0.8, 0.36, -0.9, 0.36]);
+  } else if (id === 'sports') {
+    b.box(1.6, 0.35, 3.0, col, 0, 0.2, 0, { r: 0.16 });
+    b.box(1.2, 0.3, 1.2, '#3a3446', 0, 0.5, -0.25, { r: 0.2 });
+    b.box(1.1, 0.26, 0.05, '#cfefff', 0, 0.62, 0.38, { r: 0.08, rx: -0.6 });
+    b.box(1.6, 0.06, 0.3, shade(col, 0.75), 0, 0.72, -1.35, { r: 0.03 });
+    for (const s of [-1, 1]) { b.box(0.05, 0.25, 0.3, shade(col, 0.75), s * 0.6, 0.45, -1.35, { r: 0.02 }); b.sphere(0.12, '#fff7c2', s * 0.55, 0.38, 1.48, { sz: 0.35 }); }
+    b.box(1.62, 0.06, 2.6, '#ffffff', 0, 0.42, 0, { r: 0.02 });
+    wheels.push([-0.78, 0.28, 0.95, 0.28], [0.78, 0.28, 0.95, 0.28], [-0.78, 0.28, -0.95, 0.28], [0.78, 0.28, -0.95, 0.28]);
+  } else if (id === 'rowboat') {
+    b.box(1.3, 0.45, 2.6, '#c98a4b', 0, -0.25, 0, { r: 0.2 });
+    b.cone(0.65, 0.7, '#c98a4b', 0, -0.03, 1.55, { rx: Math.PI / 2, seg: 4, center: true });
+    b.box(1.1, 0.1, 2.3, '#e8c08a', 0, 0.0, 0, { r: 0.04 });
+    for (const z of [-0.6, 0.5]) b.box(1.2, 0.08, 0.3, '#a8703a', 0, 0.12, z, { r: 0.03 });
+    b.box(1.34, 0.08, 2.64, col, 0, 0.14, 0, { r: 0.05 });
+    for (const sx of [-1, 1]) { b.cyl(0.03, 0.03, 1.6, '#e8c08a', sx * 0.9, 0.25, 0, { rz: sx * 1.1, seg: 6, center: true }); b.box(0.06, 0.25, 0.14, '#e8c08a', sx * 1.55, -0.15, 0, { r: 0.02 }); }
+  } else if (id === 'motorboat') {
+    b.box(1.7, 0.6, 3.6, '#ffffff', 0, -0.35, -0.2, { r: 0.25 });
+    b.cone(0.85, 1.3, '#ffffff', 0, -0.05, 2.2, { rx: Math.PI / 2, seg: 4, center: true });
+    b.box(1.72, 0.14, 3.6, col, 0, -0.05, -0.2, { r: 0.05 });
+    b.box(1.5, 0.08, 3.0, '#f3e6d8', 0, 0.2, -0.3, { r: 0.04 });
+    b.box(1.3, 0.45, 0.06, '#cfefff', 0, 0.5, 0.75, { r: 0.05, rx: -0.4 });
+    b.box(1.0, 0.4, 0.8, shade(col, 0.85), 0, 0.25, -0.6, { r: 0.12 });
+    b.box(0.35, 0.7, 0.35, '#3a3446', 0, -0.2, -2.1, { r: 0.08 });
+  } else if (id === 'yacht') {
+    b.box(2.4, 0.9, 5.2, '#ffffff', 0, -0.5, -0.3, { r: 0.35 });
+    b.cone(1.2, 1.8, '#ffffff', 0, -0.05, 3.1, { rx: Math.PI / 2, seg: 4, center: true });
+    b.box(2.42, 0.16, 5.2, col, 0, -0.1, -0.3, { r: 0.06 });
+    b.box(2.2, 0.08, 4.8, '#e0b27a', 0, 0.4, -0.3, { r: 0.04 });
+    b.box(1.5, 0.9, 1.8, '#ffffff', 0, 0.45, -1.1, { r: 0.2 });
+    for (const sx of [-1, 1]) b.box(0.05, 0.4, 1.4, '#cfefff', sx * 0.76, 0.9, -1.1, { r: 0.04 });
+    b.box(1.6, 0.08, 1.9, shade(col, 0.85), 0, 1.38, -1.1, { r: 0.04 });
+    b.cyl(0.06, 0.07, 4.2, '#d0d0da', 0, 0.45, 0.6, { seg: 8 });
+    b.add(Geo.shape('yachtSail', [[0, 0], [0, 3.6], [1.6, 0.2]], 0.04, 0.01), '#fff6ea', 0.05, 0.85, 0.65, 0, -Math.PI / 2, 0);
+    for (const sx of [-1, 1]) b.cyl(0.03, 0.03, 4.4, '#d0d0da', sx * 1.12, 0.65, -0.3, { rx: Math.PI / 2, seg: 6, center: true });
   } else {
     b.box(1.5, 0.55, 2.5, col, 0, 0.22, 0, { r: 0.26 });
     b.box(1.3, 0.55, 1.4, shade(col, 1.08), 0, 0.72, -0.2, { r: 0.28 });
@@ -82,11 +144,13 @@ export class VehicleSystem {
     game.vehicles = this;
     const st = game.state;
     st.owned.vehicleColor ||= {};
+    applyFreePlayState(st, VEHICLES.map((v) => v.id)); // every ride is hers from the start
     this.riding = null;
+    this.splashT = 0;
     const cars = BUILDINGS.find((b) => b.id === 'cars');
     game.world.addInteract({ x: cars.x + Math.sin(cars.face) * (cars.d / 2 + 1.4), z: cars.z + Math.cos(cars.face) * (cars.d / 2 + 1.4), r: 2.6, label: 'Zoom Rides', icon: '🛵', onUse: () => this.openShop() });
     // ride button
-    this.btn = h('button', { class: 'round-btn', style: { width: '54px', height: '54px', fontSize: '26px', display: 'none' }, onpointerdown: (e) => { e.stopPropagation(); click(); this.toggle(); } }, '🛵');
+    this.btn = h('button', { class: 'round-btn', style: { width: '54px', height: '54px', fontSize: '26px', display: 'none' }, onpointerdown: (e) => { e.stopPropagation(); click(); this.toggle(); } }, '🚗');
     game.hud.rideSlot.appendChild(this.btn);
     this.refreshBtn();
     // balloon
@@ -111,20 +175,75 @@ export class VehicleSystem {
   refreshBtn() {
     const own = this.st.owned.vehicles;
     this.btn.style.display = own.length && this.game.mode === 'play' ? 'grid' : 'none';
-    const v = VEHICLES.find((x) => x.id === (this.st.owned.vehicleActive || own[own.length - 1]));
-    if (v) this.btn.textContent = this.riding ? '🚶' : v.icon;
+    this.btn.textContent = this.riding ? '🚶' : '🚗';
   }
 
+  // the 🚗 button: get off, or pick any ride
   toggle() {
     if (this.riding) return this.dismount();
-    const own = this.st.owned.vehicles;
-    if (!own.length) return;
+    this.picker();
+  }
+
+  picker() {
     const g = this.game;
+    modal('🚗 Rides', (b, close) => {
+      const group = (title, list) => {
+        b.appendChild(h('div', { class: 'section-title' }, title));
+        const row = h('div', { class: 'grid', style: { gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))' } });
+        for (const v of list) row.appendChild(h('button', { class: 'card', onclick: () => { click(); close(); this.ride(v.id); } },
+          h('div', { class: 'thumb', style: { fontSize: '44px', width: '64px', height: '64px' } }, v.icon), h('div', { class: 'nm' }, v.name)));
+        b.appendChild(row);
+      };
+      group('On land', VEHICLES.filter((v) => !v.water));
+      group('On water 🌊 (sea or lake)', VEHICLES.filter((v) => v.water));
+      b.appendChild(h('div', { class: 'muted', style: { marginTop: '8px' } }, 'All rides are free! Change colours at Zoom Rides. Tap 🚶 to get off.'));
+    }, { narrow: false });
+    void g;
+  }
+
+  ride(id) {
+    const g = this.game;
+    const v = VEHICLE[id];
     const house = g.state.house;
     if (HM.insideHouse(house, g.player.pos.x - ORIGIN.x, g.player.pos.z - ORIGIN.z)) return toast('No driving inside the house! 😄', { icon: '🏠' });
     if (g.player.pos.y > 40) return toast('Rides stay on the ground!', { icon: '☁️' });
-    const id = this.st.owned.vehicleActive || own[own.length - 1];
+    if (v.water) {
+      const spot = this.findWater(g.player.pos);
+      if (!spot) return this.askWater(id);
+      g.player.teleport(spot.x, WATER_Y, spot.z, g.player.facing);
+    } else if (g.player.swimming) return toast('Swim to the shore first, then hop on! 🏊', { icon: '🌊' });
+    this.st.owned.vehicleActive = id;
     this.mount(id);
+  }
+
+  // nearest spot with water deep enough for a boat (or null)
+  findWater(pos, maxR = 10) {
+    const W = this.game.world;
+    const ok = (x, z) => x > WORLD.minX && x < WORLD.maxX && z > WORLD.minZ && z < WORLD.maxZ && WATER_Y - W.groundAt(x, z, 5) >= 0.8;
+    if (ok(pos.x, pos.z)) return { x: pos.x, z: pos.z };
+    for (let r = 2; r <= maxR; r += 2) {
+      for (let k = 0; k < 16; k++) {
+        const a = (k / 16) * Math.PI * 2;
+        const x = pos.x + Math.cos(a) * r, z = pos.z + Math.sin(a) * r;
+        if (ok(x, z)) return { x, z };
+      }
+    }
+    return null;
+  }
+
+  askWater(id) {
+    const g = this.game;
+    const go = (x, z) => {
+      g.player.teleport(x, undefined, z);
+      g.rig.snap(g.player.pos);
+      this.ride(id);
+    };
+    modal('🌊 Boats need water', (b, close) => {
+      b.appendChild(h('p', {}, 'Where do you want to sail?'));
+      b.appendChild(h('div', { class: 'row' },
+        h('button', { class: 'btn sky', onclick: () => { click(); close(); go(10, shoreZ(10) - 1); } }, '🏖️ The sea'),
+        h('button', { class: 'btn mint', onclick: () => { click(); close(); go(POND.x - POND.rx - 1.5, POND.z); } }, '🦆 The lake')));
+    }, { narrow: true });
   }
 
   mount(id) {
@@ -133,7 +252,8 @@ export class VehicleSystem {
     const model = vehicleModel(id, this.st.owned.vehicleColor[id] || VCOLORS[0]);
     g.scene.add(model.group);
     this.riding = { v, model, spin: 0 };
-    g.player.vehicle = { speed: v.speed, seatY: v.seatY };
+    g.player.vehicle = { speed: v.speed, seatY: v.seatY, water: !!v.water };
+    g.player.swimming = false;
     g.avatar.pose = v.stand ? 'stand' : 'drive';
     g.fx.burst(g.player.pos, 'puff');
     g.audio?.play('vroom');
@@ -148,8 +268,25 @@ export class VehicleSystem {
     this.riding = null;
     g.player.vehicle = null;
     g.avatar.pose = 'stand';
+    // stepping off a boat near the shore puts her on land, else she swims
+    if (this.wasBoat(g)) {
+      const land = this.findLand(g.player.pos);
+      if (land) g.player.teleport(land.x, undefined, land.z, g.player.facing);
+    }
     g.player.sync();
     this.refreshBtn();
+  }
+
+  wasBoat(g) { return WATER_Y - g.world.groundAt(g.player.pos.x, g.player.pos.z, 5) >= 0.8; }
+
+  findLand(pos) {
+    const W = this.game.world;
+    for (let r = 2; r <= 6; r += 2) for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * Math.PI * 2;
+      const x = pos.x + Math.cos(a) * r, z = pos.z + Math.sin(a) * r;
+      if (W.groundAt(x, z, 5) > WATER_Y - 0.2) return { x, z };
+    }
+    return null;
   }
 
   openShop() {
@@ -210,13 +347,31 @@ export class VehicleSystem {
       r.model.group.position.set(p.pos.x, p.pos.y, p.pos.z);
       r.model.group.rotation.y = p.facing;
       const sp = Math.hypot(p.vel.x, p.vel.z);
+      if (r.v.water) {
+        // boats bob and rock, and leave a little wake
+        r.model.group.position.y = WATER_Y + Math.sin(game.time * 2) * 0.05;
+        r.model.group.rotation.z = Math.sin(game.time * 1.4) * 0.03;
+        r.model.group.rotation.x = -Math.min(0.08, sp * 0.004);
+        this.splashT -= dt;
+        if (sp > 3 && this.splashT <= 0) { this.splashT = 0.25; game.fx.burst(new THREE.Vector3(p.pos.x - Math.sin(p.facing) * 1.5, WATER_Y, p.pos.z - Math.cos(p.facing) * 1.5), 'splash', { n: 3, dy: 0.1, scale: 0.6 }); }
+      }
       r.spin += sp * dt * 3;
       for (const w of r.model.wheels) w.rotation.x = r.spin;
       if (game.mode === 'build' || p.pos.y > 40) this.dismount();
       if (HM.insideHouse(game.state.house, p.pos.x - ORIGIN.x, p.pos.z - ORIGIN.z)) this.dismount();
     }
+    // swimming: little splashes while she moves
+    const p = game.player;
+    if (p.swimming) {
+      this.splashT -= dt;
+      if (Math.hypot(p.vel.x, p.vel.z) > 1 && this.splashT <= 0) {
+        this.splashT = 0.35;
+        game.fx.burst(new THREE.Vector3(p.pos.x, WATER_Y, p.pos.z), 'splash', { n: 2, dy: 0.1, scale: 0.5 });
+        if (Math.random() < 0.3) game.audio?.play('water');
+      }
+    }
     if (this.btn) {
-      const show = this.st.owned.vehicles.length && game.mode === 'play';
+      const show = game.mode === 'play';
       const want = show ? 'grid' : 'none';
       if (this.btn.style.display !== want) this.btn.style.display = want;
     }
