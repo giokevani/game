@@ -1,0 +1,32 @@
+
+> blossom-bay@1.0.0 test:e2e
+> node test/e2e/run.mjs
+
+Blossom Bay end-to-end tests (Chromium, iPhone 11 Pro landscape emulation)
+  ✓ boots with a Play button and a WebGL canvas (13199 ms)
+  ✓ character creator: pick hair, name, start (2577 ms)
+  ✓ welcome story starts and the tracker shows it (1463 ms)
+  ✓ HUD fits the iPhone screen without overlaps (1 ms)
+  ✓ walking moves the player and buildings block the way (48403 ms)
+  ✓ jumping goes up and lands again (24397 ms)
+  ✓ build mode: buy and place furniture, finish first task (22934 ms)
+  ✓ walls, floors, doors and paint tools change the house (1724 ms)
+  ✓ Pip gives an egg; caring for it hatches a pet (12767 ms)
+  ✓ bakery: wrong cakes pay nothing, right cakes pay (3626 ms)
+  ✓ florist and fishing pay out and fill collections (2717 ms)
+  ✓ garden: plant, water, grow, harvest (513 ms)
+  ✓ delivery job: reach the house before the timer (12850 ms)
+  ✓ free play: every ride is free; the motorbike is faster than walking (22714 ms)
+  ✓ swim in the lake, then sail a boat on the sea (16369 ms)
+  ✓ build mode: a pinch never lays floor, and the Erase tool removes it (1392 ms)
+  ✓ fishing is easy: cast, tap, reel (3672 ms)
+  ✓ hot-air balloon flies to Sky Island and back (146466 ms)
+  ✓ map fast travel to Town Square (606 ms)
+      town view: 84 draw calls, 332464 triangles (incl. shadow pass)
+  ✓ performance budget in town (draw calls, triangles) (2531 ms)
+  ✓ menus open and close cleanly (3733 ms)
+  ✓ save, reload, everything is still there (7809 ms)
+  ✓ backup code restores a save (8289 ms)
+  ✓ portrait mode asks to turn the phone (1819 ms)
+
+24/24 passed

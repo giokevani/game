@@ -11,8 +11,8 @@ import * as UI from '../ui/ui.js';
 export const FLOOR_HEIGHT=HM.WALL_H+FLOOR_Y;
 export const PREFABS=[
  {id:'cottage',name:'Pink Cottage',icon:'🏡',floors:1,ext:'ex_pink'},
- {id:'blue_house',name:'Blue Family House',icon:'🏠',floors:2,ext:'ex_cream',roof:'#7fb7e8'},
- {id:'townhouse',name:'Three-floor Townhouse',icon:'🏘️',floors:3,ext:'ex_cream'},
+ {id:'blue_house',name:'Blue Family House',icon:'🏠',floors:2,ext:'ex_blue',roof:'#7fb7e8'},
+ {id:'townhouse',name:'Three-floor Townhouse',icon:'🏘️',floors:3,ext:'ex_lilac'},
  {id:'shop',name:'Little Shop',icon:'🏪',floors:1,ext:'ex_cream'},
  {id:'castle',name:'Cloud Castle',icon:'🏰',floors:3,ext:'ex_cream',roofStyle:'flat'},
  {id:'tower',name:'Magic Tower',icon:'🗼',floors:3,ext:'ex_cream',roofStyle:'spire'},
@@ -54,7 +54,7 @@ export class BuildingSystem {
  createViews(record){const g=this.game;if(record.realm!==this.realm())return;
   const entry={record,systems:[],extras:new THREE.Group()};g.scene.add(entry.extras);
   record.floors.forEach((house,i)=>{
-   const sys=Object.create(HouseSystem.prototype);sys.game=g;sys.house=house;sys.view=new HouseView(g.scene,g.world,{origin:{x:record.x-14,y:record.y+i*FLOOR_HEIGHT,z:record.z-20},tag:record.id+':'+i,fence:false,roofStyle:i===record.floors.length-1?record.roofStyle:'none'});sys.view.rebuild(house);sys.interacts=[];sys.refreshInteract();sys.build=new BuildMode(g,sys);sys.checkStars=()=>sys.rating();entry.systems.push(sys);
+   const sys=Object.create(HouseSystem.prototype);sys.game=g;sys.house=house;sys.fixedPlot=true;sys.view=new HouseView(g.scene,g.world,{origin:{x:record.x-14,y:record.y+i*FLOOR_HEIGHT,z:record.z-20},tag:record.id+':'+i,fence:false,roofStyle:i===record.floors.length-1?record.roofStyle:'none'});sys.view.rebuild(house);sys.interacts=[];sys.refreshInteract();sys.build=new BuildMode(g,sys);sys.checkStars=()=>sys.rating();entry.systems.push(sys);
   });
   // Stair landings are kept outside furniture so every floor stays editable.
   for(let i=0;i<record.floors.length;i++){

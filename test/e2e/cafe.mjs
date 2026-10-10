@@ -104,6 +104,8 @@ try {
   await waitG(() => document.querySelectorAll('.rest').length === 5);
   ok('every menu is open', await G(() => ![...document.querySelectorAll('.rest')].some((r) => r.classList.contains('locked'))));
   await page.locator('.rest', { hasText: 'Pancake' }).click();
+  // Free service can choose any breakfast; pin this touch-cooking test to pancakes.
+  await G(() => { window.__bb.cafe.level.info.recipes = ['pancakes']; window.__bb.cafe.level.info.combo = 0; });
   await waitG(() => { const b = document.querySelector('.bubble'); return b && b.offsetParent && b.parentElement.style.display !== 'none'; }, null, 60000);
   await page.waitForTimeout(500);
   await shot('03-service');
@@ -192,6 +194,10 @@ try {
   await shot('06-back-in-town');
   // build mode works right after the café
   await G(() => window.__bb.openBuild());
+  await page.waitForTimeout(300);
+  ok('building catalogue opens away from home', await G(() => document.querySelector('.panel')?.textContent.includes('Build anywhere')));
+  await page.locator('.panel-head .x').click();
+  await G(() => { const g=window.__bb; g.player.teleport(-66, undefined, -60); g.openBuild(); });
   await page.waitForTimeout(800);
   ok('build mode opens after cooking', await G(() => window.__bb.mode === 'build'));
   await shot('07-build');

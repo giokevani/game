@@ -26,6 +26,11 @@ export function terrainHeight(x, z) {
     if (z < s) h -= (bz / 14) * 0.55;
     else h -= 0.55 + Math.min(4, (z - s) * 0.18);
   }
+  // Deterministic offshore islands; fade them in beyond the original bay.
+  if(z>160){const ix=Math.round(x/140)*140,iz=Math.round(z/180)*180;
+    const distance=Math.hypot((x-ix)/30,(z-iz)/35);
+    if(distance<1){const fade=Math.min(1,(z-160)/40);h += fade*7*Math.pow(1-distance*distance,2);}
+  }
   // pond
   const pd = ((x - POND.x) / POND.rx) ** 2 + ((z - POND.z) / POND.rz) ** 2;
   if (pd < 1.6) h -= Math.max(0, 1.6 - pd) * 0.9 + Math.max(0, 1 - pd) * 1.8; // deep enough to swim and sail in the middle

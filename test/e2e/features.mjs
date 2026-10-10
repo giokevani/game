@@ -33,6 +33,7 @@ try {
     assert.ok(await ev(()=>window.__bb.player.grounded),id+' lands');
     await ev(()=>window.__bb.vehicles.dismount());
   }
+  console.log('Part 1: picker, keyboard climb, roof crossing, auto land, all touch rides PASS');
   }
   if(await ev(()=>!!window.__bb.skyCity)){
     await ev(()=>window.__bb.skyCity.picker());
@@ -90,5 +91,4 @@ try {
     console.log('Part 5: six worlds, return doors, carried avatar and ride, save safety, lava and performance PASS');
   }
   assert.deepEqual(errors,[]);
-  console.log('Part 1: picker, keyboard climb, roof crossing, auto land, all touch rides PASS');
 } finally { await browser.close();srv.stop(); }

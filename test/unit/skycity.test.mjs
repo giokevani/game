@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SKY_LEVELS, zoneAt } from '../../src/data/map.js';
+import { Player } from '../../src/player/player.js';
 import { World } from '../../src/world/world.js';
 import * as THREE from 'three';
 test('three distinct cloud heights have landing surfaces and height-aware zones',()=>{
@@ -12,3 +13,5 @@ test('elevated walls do not block players on the ground and interactions respect
  const p=new THREE.Vector3(0,0,0);w.resolve(p,.42,0);assert.equal(p.x,0);assert.equal(p.z,0);
  w.addInteract({x:0,z:0,y:46,dy:1,label:'Sky Lift'});assert.equal(w.nearestInteract(p),null);p.y=46;assert.equal(w.nearestInteract(p).label,'Sky Lift');
 });
+
+test('ground fast travel stays below cloud platforms',()=>{const w=new World(new THREE.Scene(),{});w.addPlatform({x:0,z:0,r:30,y:46});const p=new Player(w,{root:new THREE.Group(),update(){}});p.teleport(0,undefined,0);assert.equal(p.pos.y,0);p.teleport(0,46,0);assert.equal(p.pos.y,46);});

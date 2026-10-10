@@ -15,6 +15,18 @@ export class SkyCity {
         b.cyl(.2,.3,2,'#d6afff',x,level.y,z,{seg:6});b.sphere(1.5,['#ffb8d6','#b8eaff','#ffe8a1'][i%3],x,level.y+3,z,{ws:8,hs:6});
         g.world.addCircle(x,z,.5,{bot:level.y,top:level.y+3.5,tag:'skycity'});
       }
+      for(let i=0;i<3;i++){
+        const x=level.x-16+i*16,z=level.z-18;
+        b.box(6,4,5,['#ffe0ec','#d6ecff','#e9e1ff'][i],x,level.y,z);
+        b.cone(4.5,2.5,['#ff8fb5','#7fb7e8','#b58cff'][i],x,level.y+4,z,{seg:4,ry:Math.PI/4});
+        b.box(1.2,2.2,.12,'#fff4e6',x,level.y,z+2.55);
+        for(const dx of [-1.9,1.9])b.box(1,1,.12,'#cfefff',x+dx,level.y+2,z+2.56);
+        g.world.addBox(x-3,z-2.5,x+3,z+2.5,{bot:level.y,top:level.y+6.5,tag:'skycity'});
+      }
+      if(level.id==='star_castle')for(const x of [level.x-22,level.x+22]){
+        b.cyl(2,2,8,'#fff4e6',x,level.y,level.z-15,{seg:10});b.cone(2.5,4,'#b58cff',x,level.y+8,level.z-15,{seg:8});
+        g.world.addCircle(x,level.z-15,2,{bot:level.y,top:level.y+12,tag:'skycity'});
+      }
       const m=new THREE.Mesh(b.build({ao:0}),M.std);m.receiveShadow=true;g.scene.add(m);
       g.world.addPlatform({x:level.x,z:level.z,r:level.r,y:level.y,tag:'skycity'});
       this.pad(level.x,level.y,level.z+level.r-6);

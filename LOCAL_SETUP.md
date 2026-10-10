@@ -16,14 +16,14 @@
 
 If you'd rather not use the terminal: on the GitHub page, switch to the branch `claude/nice-fermi-a6eund`, then **Code → Download ZIP**. You still need Node.js and `npm install` / `npm run dev` to run it.
 
-## 2. Keep building it with Claude Code
+## 2. Continue development locally
 1. Install Claude Code on your computer (setup guide: code.claude.com/docs).
 2. In the terminal, go into the `game` folder and run `claude`.
 3. Paste the brief below. Do it **one part at a time**, in this order, and test on her phone after each part.
 
 Note: Claude Code on your computer uses your own Claude plan, so the work still costs credit or plan usage. Only the hosting is free.
 
-## 3. Brief to paste
+## 3. Original feature brief
 
 > Blossom Bay (Three.js + Vite, procedural art, iPhone Safari). Free play: no levels, only clothes cost coins. Add, one at a time:
 > 1. **Fly up to the sky:** a unicorn she can ride that flies up and down, plus a helicopter, an airship and the hot-air balloon. Flying goes in `src/vehicles/system.js`.
@@ -34,6 +34,14 @@ Note: Claude Code on your computer uses your own Claude plan, so the work still 
 >
 > Keep everything free, keep it smooth on an iPhone 11 Pro, and add tests for each part like `test/e2e/run.mjs`.
 
+## Current controls
+
+The five features in the brief are implemented. Hold ▲ / ▼ while riding to fly; keyboard controls are Space/R and Shift/F. Sky Lift pads connect the town and three cloud levels. Use 🔨 to place a building or edit a nearby building's floors. Footprints must be clear, dry and flat. All buildings and rides are free.
+
+The six doors along the eastern beach lead to separate worlds. Each has a return door. Saves made away from town resume beside the corresponding beach door. Buildings retain their own realm and floor state.
+
+Browser tests use Chromium with an iPhone-sized touch viewport. A physical iPhone Safari check remains open.
+
 ## 4. Useful commands
 | Command | What it does |
 |---|---|
@@ -41,6 +49,9 @@ Note: Claude Code on your computer uses your own Claude plan, so the work still 
 | `npm test` | Logic tests |
 | `npm run build` | Build the version that goes online |
 | `npm run test:e2e` | Browser tests for the town |
+| `npm run test:e2e:features` | Browser tests for all five features |
 | `npm run test:e2e:cafe` | Browser tests for the café |
 
 The online version is at https://giokevani.github.io/game/. It updates automatically when changes are pushed to the branch above (see the repo's **Actions** tab).
+
+For browser tests, install Playwright locally with `npm install --no-save playwright@1.56.1` and `npx playwright install chromium`. Run `npm run build` before E2E tests. Test screenshots and logs go in `test/out/`.

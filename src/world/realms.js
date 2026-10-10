@@ -22,7 +22,7 @@ export class MagicDoors {
   world.addInteract({...p,r:3,dy:2,label:r.name,icon:r.icon,onUse});
   // English name is visible above each door.
   const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');ctx.fillStyle='#fffaf0';ctx.fillRect(0,0,512,96);ctx.fillStyle='#51435f';ctx.textAlign='center';ctx.font='600 38px Fredoka, sans-serif';ctx.fillText(r.name,256,60);
-  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Mesh(new THREE.PlaneGeometry(5.5,1),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));sign.position.set(p.x,p.y+4.8,p.z);scene.add(sign);
+  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Mesh(new THREE.PlaneGeometry(5.5,1),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));sign.material.side=THREE.FrontSide;sign.position.set(p.x,p.y+4.8,p.z+.02);scene.add(sign);const back=sign.clone();back.rotation.y=Math.PI;back.position.z=p.z-.02;scene.add(back);
  }
  make(r){const scene=new THREE.Scene();scene.background=new THREE.Color(r.sky);scene.fog=new THREE.Fog(r.sky,60,260);scene.add(new THREE.HemisphereLight('#ffffff',r.ground,2));const sun=new THREE.DirectionalLight('#fff4e6',2);sun.position.set(20,45,20);scene.add(sun);
   const world=new World(scene,this.game.quality.level,{height:()=>0,waterY:-100});world.zoneAt=()=>({id:r.id,name:r.name,icon:r.icon});

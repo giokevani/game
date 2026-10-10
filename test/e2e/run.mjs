@@ -64,13 +64,12 @@ try {
 
   await test('HUD fits the iPhone screen without overlaps', async () => {
     const r = await ev(() => {
-      const els = ['.pill.coins', '.lvl', '.hud-tr', '.round-btn', '.joy-hint'].map((s) => document.querySelector(s)?.getBoundingClientRect());
+      const els = ['.pill.coins', '.hud-tr', '.round-btn', '.joy-hint'].map((s) => document.querySelector(s)?.getBoundingClientRect());
       return { els: els.map((b) => b && { l: b.left, t: b.top, r: b.right, b: b.bottom }), w: innerWidth, h: innerHeight };
     });
     for (const b of r.els) assert(b && b.l >= 0 && b.t >= 0 && b.r <= r.w && b.b <= r.h, 'element off screen ' + JSON.stringify(b));
-    const [coins, lvl, tr] = r.els;
-    assert(lvl.r < tr.l, 'level pill overlaps menu buttons');
-    assert(coins.r <= lvl.l + 1, 'coins overlaps level');
+    const [coins, tr] = r.els;
+    assert(coins.r < tr.l, 'coins overlaps menu buttons');
   });
 
   await test('walking moves the player and buildings block the way', async () => {
@@ -287,9 +286,9 @@ try {
     await wait(400);
     await ev(() => [...document.querySelectorAll('.mg .btn')].find((b) => b.textContent.includes('Cast')).click());
     await page.waitForFunction(() => [...document.querySelectorAll('.mg .btn')].some((b) => b.textContent.includes('Catch')), null, { timeout: 30000 });
-    const press = () => ev(() => { const b = [...document.querySelectorAll('.mg .btn')].find((x) => /Catch|Reel/.test(x.textContent)); b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); });
+    const press = () => ev(() => { const b = [...document.querySelectorAll('.mg .btn')].find((x) => /Catch|Reel/.test(x.textContent)); if (!b) return false; b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); return true; });
     await press();
-    for (let i = 0; i < 4; i++) { await wait(150); await press(); }
+    for (let i = 0; i < 4; i++) { await wait(150); if (!await press()) break; }
     await wait(400);
     const t = await ev(() => document.querySelector('.mg').textContent);
     assert(/You caught/.test(t), 'no fish: ' + t.slice(0, 120));

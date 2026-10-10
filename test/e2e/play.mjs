@@ -11,8 +11,8 @@ try {
   await page.evaluate(() => {
     const g = window.__bb; g.state.player.name = g.state.player.name || 'Jeva';
     document.querySelector('.panel-head .btn.mint')?.click();
-    for (let i = 0; i < 8; i++) document.querySelector('.dialog .btn')?.click();
   });
+  for (let i=0;i<8;i++) { await page.evaluate(()=>document.querySelector('.dialog .btn')?.click()); await page.waitForTimeout(150); }
   for (const s of steps) {
     if (s.js) { const r = await page.evaluate(s.js); if (r !== undefined) console.log('>', JSON.stringify(r)); }
     if (s.keys) for (const k of s.keys) await page.keyboard.down(k);

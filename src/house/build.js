@@ -304,7 +304,7 @@ export class BuildMode {
       // plot size
       const idx = HM.PLOT_SIZES.indexOf(this.house.size);
       b.appendChild(h('div', { class: 'section-title' }, `🌳 Land: ${this.house.size} × ${this.house.size} tiles`));
-      if (idx < HM.PLOT_SIZES.length - 1) {
+      if (idx < HM.PLOT_SIZES.length - 1 && !this.sys.fixedPlot) {
         const next = HM.PLOT_SIZES[idx + 1], price = HM.PLOT_PRICES[idx + 1], need = [0, 4, 8, 13][idx + 1];
         const ok = this.lvl >= need;
         b.appendChild(h('div', { class: 'row' },
@@ -322,7 +322,7 @@ export class BuildMode {
             this.game.emit('plot', next);
             this.refreshTop();
           } }, `🪙 ${fmt(price)}`)));
-      } else b.appendChild(h('div', { class: 'muted' }, 'You own the biggest plot in Blossom Bay!'));
+      } else b.appendChild(h('div', { class: 'muted' }, this.sys.fixedPlot ? 'This building has a 16 × 16 metre plot. Add floors for more space.' : 'You own the biggest plot in Blossom Bay!'));
       // exterior
       b.appendChild(h('div', { class: 'section-title' }, '🧱 Outside walls'));
       const ex = h('div', { class: 'grid' });

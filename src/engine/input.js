@@ -57,7 +57,7 @@ export class Input {
 
   down(e) {
     if (e.pointerType === 'touch') this.usedTouch = true;
-    this.el.setPointerCapture?.(e.pointerId);
+    if(e.isTrusted) this.el.setPointerCapture?.(e.pointerId);
     const p = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), type: e.pointerType, button: e.button, moved: 0 };
     const w = window.innerWidth;
     p.role = 'look';

@@ -1,0 +1,42 @@
+
+> blossom-bay@1.0.0 build
+> vite build
+
+vite v8.3.1 building client environment for production...
+transforming...
+✓ 73 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                            1.44 kB │ gzip:   0.62 kB
+dist/assets/fredoka-latin-ext-400-normal-h-azoVru.woff2    2.62 kB
+dist/assets/fredoka-latin-ext-700-normal--a2O67AJ.woff2    2.67 kB
+dist/assets/fredoka-latin-ext-600-normal-GoyidTAB.woff2    2.69 kB
+dist/assets/fredoka-latin-ext-500-normal-0PZPWlWP.woff2    2.71 kB
+dist/assets/fredoka-latin-ext-400-normal-Cc3DdpKI.woff     3.44 kB
+dist/assets/fredoka-latin-ext-700-normal-DBnuyHy7.woff     3.46 kB
+dist/assets/fredoka-latin-ext-600-normal-BExgZzUO.woff     3.47 kB
+dist/assets/fredoka-latin-ext-500-normal-CA82fdYH.woff     3.48 kB
+dist/assets/fredoka-hebrew-700-normal-DBqnFHCe.woff2       5.01 kB
+dist/assets/fredoka-hebrew-400-normal-CT3eDt6U.woff2       5.06 kB
+dist/assets/fredoka-hebrew-500-normal-DdMTjgiE.woff2       5.14 kB
+dist/assets/fredoka-hebrew-600-normal-CTBxhdlE.woff2       5.18 kB
+dist/assets/fredoka-hebrew-700-normal-DiqR04Vd.woff        6.47 kB
+dist/assets/fredoka-hebrew-400-normal-S03uWvSu.woff        6.48 kB
+dist/assets/fredoka-hebrew-500-normal-BtShCMVp.woff        6.48 kB
+dist/assets/fredoka-hebrew-600-normal-BiVDObXj.woff        6.48 kB
+dist/assets/fredoka-latin-700-normal-BOIZVyIN.woff2       15.90 kB
+dist/assets/fredoka-latin-400-normal-17JuUzdy.woff2       16.07 kB
+dist/assets/fredoka-latin-500-normal-B0JifZgm.woff2       16.24 kB
+dist/assets/fredoka-latin-600-normal-C4zohCW5.woff2       16.46 kB
+dist/assets/fredoka-latin-700-normal-C8FeHd3X.woff        19.81 kB
+dist/assets/fredoka-latin-400-normal-DbXSrOeS.woff        20.12 kB
+dist/assets/fredoka-latin-500-normal-BL692wg7.woff        20.18 kB
+dist/assets/fredoka-latin-600-normal-CcrEjrB4.woff        20.38 kB
+dist/assets/cafe-DDGKoZWU.css                             14.40 kB │ gzip:   3.68 kB
+dist/assets/index-DVv9rkpt.css                            22.46 kB │ gzip:   5.35 kB
+dist/assets/cafe-96WHamyM.js                             101.06 kB │ gzip:  36.16 kB
+dist/assets/systems-BTHhjRqD.js                          200.70 kB │ gzip:  71.62 kB
+dist/assets/state-COTrz_HW.js                            269.16 kB │ gzip:  74.96 kB
+dist/assets/index-D4YmKPZJ.js                            515.29 kB │ gzip: 142.14 kB
+
+✓ built in 199ms

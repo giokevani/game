@@ -1,0 +1,27 @@
+
+> blossom-bay@1.0.0 test:e2e:cafe
+> node test/e2e/cafe.mjs
+
+PASS café door in town offers cooking Cook at the Café
+PASS walking in hides the town and the town HUD 
+PASS café menu has Free Kitchen and guests, no levels 
+PASS every menu is open 
+PASS guest orders in English Hello! I'd like pancakes with blueberries, please! 🔊
+PASS pancakes cooked by touch add,stir,cook,place
+PASS the dish pays Blossom Bay coins 150 -> 265
+PASS Free Kitchen takes lots of ingredients 26 items
+PASS undo removes the last one 
+PASS chopping puts tomato slices into the dish 
+PASS a guest pays for her own dish 265 -> 420
+PASS her dish is saved in My dishes 
+PASS leaving brings her back to town with her coins {"mode":"play","coins":420,"ground":true,"hud":true}
+PASS building catalogue opens away from home 
+PASS build mode opens after cooking 
+PASS all 17 recipes cook inside Blossom Bay 
+PASS old /cook/ link leads to the café in Blossom Bay http://localhost:4175/?cafe=1
+PASS progress survives reload and ?cafe opens the café {"before":{"coins":545,"dishes":1},"after":{"coins":545,"dishes":1}}
+PASS menu has a way out 
+PASS stand-alone Blossom Kitchen money and words move into Blossom Bay {"coins":420,"words":1,"script":"lat"}
+PASS no console errors 
+
+21/21 passed

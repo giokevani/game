@@ -27,8 +27,18 @@ export async function startServer(port = 4173) {
 
 export async function launch(opts = {}) {
   const browser = await chromium.launch({
-    args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+    args: ['--mute-audio', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
   });
+  const newContext = browser.newContext.bind(browser);
+  browser.newContext = async (...args) => {
+    const context = await newContext(...args);
+    await context.addInitScript(() => {
+      // System speech can bypass Chromium's audio mute on macOS.
+      window.speechSynthesis?.cancel();
+      if (window.speechSynthesis) window.speechSynthesis.speak = () => {};
+    });
+    return context;
+  };
   const context = await browser.newContext({ ...IPHONE_11_PRO_LANDSCAPE, ...opts });
   const page = await context.newPage();
   const errors = [];
