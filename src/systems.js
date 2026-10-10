@@ -1,5 +1,7 @@
 // Registers all gameplay systems in order.
 import { MagicDoors } from './world/realms.js';
+import { Adventures } from './adventures/system.js';
+import './adventures/style.css';
 import { EndlessWorld } from './world/endless.js';
 import { BuildingSystem } from './house/buildings.js';
 import { SkyCity } from './world/skycity.js';
@@ -30,4 +32,5 @@ export function registerSystems(game) {
   game.addSystem(Object.assign(new QuestSystem(),{homeOnly:true}));
   game.addSystem(Object.assign(new Weather(),{homeOnly:true}));
   game.addSystem(Object.assign(new CafeSystem(),{homeOnly:true}));
+  game.addSystem(new Adventures());
 }

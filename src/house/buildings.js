@@ -28,8 +28,9 @@ export function placement(world,records,x,y,z,realm='home'){
  if(Math.max(...heights)-Math.min(...heights)>.7||heights.some(h=>Math.abs(h-y)>1))return 'Find a flat, wide spot';
  if(heights.some(h=>h<(world.waterY??-.32)+.15))return 'Build on dry land';
  if(realm==='home'&&y<30&&points.some(([dx,dz])=>isBlocked(x+dx,z+dz,1)))return 'Leave room for the town and paths';
+ if((world.interactables||[]).some(it=>it.adventure&&Math.abs(y-it.y)<3&&Math.abs(x-it.x)<11&&Math.abs(z-it.z)<11))return 'Leave room for discoveries and friends';
  // Ignore nature trunks; placing a building clears them.
- if(world.boxes.some(c=>!c.off&&!c.tag&&y<c.top&&y+3>(c.bot??-Infinity)&&x+half>c.x1&&x-half<c.x2&&z+half>c.z1&&z-half<c.z2))return 'Leave room for buildings';
+ if(world.boxes.some(c=>!c.off&&(!c.tag||c.tag==='adventure'||c.tag==='skycity')&&y<c.top&&y+3>(c.bot??-Infinity)&&x+half>c.x1&&x-half<c.x2&&z+half>c.z1&&z-half<c.z2))return 'Leave room for buildings';
  return null;
 }
 export class BuildingSystem {

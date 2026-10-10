@@ -1,0 +1,65 @@
+
+> blossom-bay@1.0.0 test
+> node --test test/unit/*.test.mjs
+
+✔ all world stories have reachable distinct finds and useful clues (0.765334ms)
+✔ discoveries and friend rewards cannot be repeated or completed early (0.232666ms)
+✔ old saves migrate safely, and a completed adventure survives save migration (0.721958ms)
+✔ the compass follows the camera, including after a quarter turn (0.106792ms)
+✔ every prefab is free-standing, has 1–3 floors and valid furniture (18.016125ms)
+✔ placement rejects overlap, water and steep terrain (0.44275ms)
+✔ building placement preserves story locations without blocking a different cloud height (0.248083ms)
+✔ rebuilding one house leaves another house platforms and colliders intact (53.636667ms)
+✔ egg odds: every species hatches from some egg and rolls match weights (17.558625ms)
+✔ pet stages and needs (2.477542ms)
+✔ cakes and bouquets are always makeable (6.47575ms)
+✔ fish: night fish only at night, every fish catchable (35.495ms)
+✔ garden growth and job levels (0.238ms)
+✔ quests reference real NPCs, zones and levels (0.467625ms)
+✔ stickers evaluate safely on a fresh save (0.564541ms)
+✔ catalogues: ids unique, prices sane, everything unlockable (0.289166ms)
+✔ furniture models build and stay light enough for a phone (98.493459ms)
+✔ word list: unique ids, English + Russian + emoji for each (0.82025ms)
+✔ 17 recipes across 5 restaurants, all steps valid (1.495083ms)
+✔ chopping comes before the toppings that need it (0.337417ms)
+✔ order sentences are proper English with a Russian line (5.933458ms)
+✔ Russian in Latin letters (0.157083ms)
+✔ money: better cooking pays more, prices fit the Blossom Bay economy (0.186166ms)
+✔ café progress is stored in the Blossom Bay save; coins are Blossom Bay coins (0.420334ms)
+✔ the old stand-alone Blossom Kitchen save moves in once (0.208334ms)
+✔ Free Kitchen: a big pantry, every food has a word, colour and kind (0.172333ms)
+✔ Word Book: every recipe teaches its words (0.727375ms)
+✔ makeOrder is random but valid across many seeds (0.874291ms)
+✔ level curve is increasing and consistent (1.937583ms)
+✔ addXP reports level ups (1.153584ms)
+✔ coins: earn, spend, refuse overspending (0.124583ms)
+✔ migrate keeps saved data and fills new fields (1.053291ms)
+✔ backup code round trip (with emoji names) (0.837375ms)
+✔ free play: no levels or prices, except clothes (46.232208ms)
+✔ endless terrain stays bounded, chunks match at all seam vertices (32.766084ms)
+✔ unloading colliders removes grid and registry references (0.306667ms)
+✔ flight climbs, hovers, descends and respects ceiling (3.059833ms)
+✔ frozen flying player ignores climb and auto landing returns to surface (0.316791ms)
+✔ starter house: every piece of furniture is in a valid spot (3.73425ms)
+✔ outside walls are automatic, inside walls need both tiles (0.336541ms)
+✔ rooms, painting and arches (0.459417ms)
+✔ placement rules: walls, overlaps, surfaces, plot edge (0.504334ms)
+✔ every furniture item fits somewhere on the biggest plot (4.114667ms)
+✔ home rating: starter is 1 star, bigger homes score more (0.985792ms)
+✔ plot sizes grow from the street side (0.150792ms)
+✔ six English realms have unique ids, safe doors and Space low gravity (0.821291ms)
+✔ realm physics uses its own floor and water level (0.723209ms)
+✔ three distinct cloud heights have landing surfaces and height-aware zones (1.501875ms)
+✔ elevated walls do not block players on the ground and interactions respect floor height (0.3325ms)
+✔ ground fast travel stays below cloud platforms (0.296792ms)
+✔ 40 shells, none inside a building (1.083583ms)
+✔ zones are where the map says (0.14025ms)
+✔ town is flat where people walk, sea is deep (0.166125ms)
+ℹ tests 53
+ℹ suites 0
+ℹ pass 53
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 298.123125

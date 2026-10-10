@@ -1,0 +1,11 @@
+
+> blossom-bay@1.0.0 test:e2e:adventures
+> node test/e2e/adventures.mjs
+
+PASS The sleepy stars dialogue, finds, reward and budget {"calls":17,"triangles":22982,"items":5}
+PASS A song for the clouds dialogue, finds, reward and budget {"calls":17,"triangles":31990,"items":5}
+PASS The dragon’s tea party dialogue, finds, reward and budget {"calls":18,"triangles":13310,"items":5}
+PASS The missing rainbow dialogue, finds, reward and budget {"calls":17,"triangles":17890,"items":5}
+PASS A light for the reef dialogue, finds, reward and budget {"calls":17,"triangles":21546,"items":5}
+PASS A cosy winter welcome dialogue, finds, reward and budget {"calls":23,"triangles":11588,"items":5}
+PASS all six stories, three postcards, constellation, persistence and original tasks; no console errors

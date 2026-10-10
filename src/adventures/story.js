@@ -1,0 +1,26 @@
+// Story content and save-safe progression. Exploration stays free and untimed.
+export const STORIES = [
+  {id:'space',title:'The sleepy stars',name:'Nova',face:'🦉',color:'#a8eaff',body:'#c5b5ec',kind:'owl',request:'My telescope has gone dark. Three little stars rolled away! Look beside the moon rocks, the ring garden and my rocket.',thanks:'You found them! Tonight I can show the moon its favourite constellations.',items:['Moonbeam','Little comet','Stardust'],spots:[[-22,-18],[28,-28],[-34,-55]],hints:['Beside the moon rocks, left of the palace.','Beyond the ring garden on the right.','Behind the rocket, far to the left.']},
+  {id:'heaven',title:'A song for the clouds',name:'Lumi',face:'🐰',color:'#ffd45e',body:'#fff4e6',kind:'rabbit',request:'The wind scattered my music notes. Will you find three golden notes? Then the clouds can sing again.',thanks:'Listen with your imagination. The clouds are humming your song!',items:['Morning note','Breeze note','Sunset note'],spots:[[-26,-16],[30,-35],[-18,-63]],hints:['Near the first cloud arch on the left.','Under the golden rings on the right.','At the far end of the cloud garden.']},
+  {id:'hell',title:'The dragon’s tea party',name:'Ember',face:'🐲',color:'#ffad55',body:'#e9a2a7',kind:'dragon',request:'Everyone thinks dragons only breathe fire. I bake! My three biscuit boxes are missing. Find them and we can have a tea party.',thanks:'You saved tea time! I made you a warm cinnamon biscuit. Careful, it is still crumbly.',items:['Cinnamon biscuits','Honey biscuits','Star biscuits'],spots:[[-22,-19],[38,-25],[-27,-59]],hints:['Near the warm rocks on the left.','Past the lava pool, on the safe path to the right.','Behind the little volcano.']},
+  {id:'candy',title:'The missing rainbow',name:'Poppy',face:'🦊',color:'#ff8fc0',body:'#ffbd8d',kind:'fox',request:'My rainbow picnic needs three flavours. Can you find the strawberry, lemon and blueberry sweets? Please save a few for the butterflies.',thanks:'Pink, yellow, purple! That is the tastiest rainbow I have ever seen. There is a picnic place for you, too.',items:['Strawberry sweet','Lemon sweet','Blueberry sweet'],spots:[[-24,-18],[30,-28],[-30,-58]],hints:['Beside the strawberry lollipops on the left.','Near the biscuit bridge on the right.','Behind the gingerbread cottage.']},
+  {id:'underwater',title:'A light for the reef',name:'Marina',face:'🐢',color:'#76eee2',body:'#a2d4a0',kind:'turtle',request:'The reef lantern needs three pearls. They are somewhere in the coral garden. Will you help me bring its light back?',thanks:'The lantern is shining! Small fish can find their way home again. You are a friend of the reef.',items:['Rose pearl','Sea pearl','Moon pearl'],spots:[[-25,-17],[28,-32],[-34,-58]],hints:['Between the pink corals on the left.','Near the front of the ship on the right.','At the far edge of the sea garden.']},
+  {id:'ice',title:'A cosy winter welcome',name:'Pipkin',face:'🐧',color:'#83bdeb',body:'#748dab',kind:'penguin',request:'My guests are nearly here! I need three snow crystals to light the winter lanterns. They sparkle even when the snow is thick.',thanks:'Now nobody will lose the path. Come warm your flippers by the lanterns. Or your feet, if you have feet!',items:['Frost crystal','Snow crystal','Aurora crystal'],spots:[[-24,-20],[32,-30],[-25,-61]],hints:['By the first ice trees on the left.','Below the frozen waterfall on the right.','Behind the little snow hut.']},
+];
+export const SKY_SECRETS = [
+  {id:'cloud_postcard',title:'A letter from the clouds',realm:'home',x:-32,y:46,z:-34,text:'Someone has written: “If you can see this, you are already an explorer.”'},
+  {id:'rainbow_postcard',title:'Rainbow wish',realm:'home',x:60,y:96,z:-33,text:'A tiny wish is tucked inside: “May you always find something lovely around the next corner.”'},
+  {id:'castle_postcard',title:'The star keeper’s note',realm:'home',x:-18,y:150,z:-65,text:'The star keeper counts discoveries, not coins. Every kind thing you do belongs in the sky.'},
+];
+export function adventureState(state) {
+  state.adventures ||= {};
+  const a=state.adventures;
+  for(const k of ['found','helped','met','secrets']) if(!Array.isArray(a[k]))a[k]=[];
+  a.tracked ??= 'space';
+  return a;
+}
+export function foundCount(a,id){return STORIES.find(s=>s.id===id)?.items.filter((_,i)=>a.found.includes(`${id}:${i}`)).length||0;}
+export function collect(a,id,index){const s=STORIES.find(s=>s.id===id);const key=`${id}:${index}`;if(!s||!Number.isInteger(index)||!s.items[index]||a.found.includes(key))return false;a.found.push(key);return true;}
+export function complete(a,id){if(foundCount(a,id)!==3||a.helped.includes(id))return false;a.helped.push(id);return true;}
+export function nextTarget(a,id){const s=STORIES.find(s=>s.id===id);if(!s||a.helped.includes(id))return null;const i=s.items.findIndex((_,i)=>!a.found.includes(`${id}:${i}`));return i<0?{x:0,z:-17,name:s.name,hint:`Take your finds back to ${s.name}.`}:{x:s.spots[i][0],z:s.spots[i][1],name:s.items[i],hint:s.hints[i]};}
+export function compassDirection(dx,dz,yaw){if(Math.hypot(dx,dz)<3)return '✨';const right=dx*Math.cos(yaw)-dz*Math.sin(yaw),forward=-dx*Math.sin(yaw)-dz*Math.cos(yaw);const angle=Math.atan2(right,forward);return Math.abs(angle)<.5?'↑':Math.abs(angle)>2.5?'↓':angle>0?'→':'←';}

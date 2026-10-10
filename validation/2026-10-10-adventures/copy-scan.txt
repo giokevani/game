@@ -1,0 +1,7 @@
+
+=== validation/2026-10-10-adventures/player-copy.txt ===
+1 MED  (770 words, lang=en, sentence sd=3.5)
+
+MED   document     Flat sentence rhythm (sd 3.5, mean 7.3 words)
+                     → Vary sentence length on purpose — low variance is the documented flat-cadence fingerprint.
+

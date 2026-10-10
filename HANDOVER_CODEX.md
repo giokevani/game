@@ -2,6 +2,16 @@
 
 Status: 10 October 2026. Development continued in this Codex session after the companion task failed before starting.
 
+## Exploration upgrade
+
+Gio selected a richer world with beautiful places, secrets, characters and adventures. The new Journal contains six character stories, eighteen discoveries, a clue compass that follows the camera, three cloud postcards and a six-friend constellation at Star Castle. Progress is saved and rewards are paid once. Town tasks remain accessible from the Journal.
+
+Every magic world now has a furnished meeting place, an animated keeper and companion, a lit beacon after completion, clearer paths and themed landmarks. Space has a rocket and observatory with a ringed planet; Heaven has a rainbow and cloud garden; Hell has a dragon bakery and volcano; Candy Land has a gingerbread cottage and biscuit bridge; Underwater has a shipwreck and coral garden; Ice has a snow hut, waterfall and aurora ribbons. Story locations and static landmarks are protected from building placement. Return doors sit beside the arrival path so they do not obscure the camera. The old town tracker is hidden while exploring other worlds.
+
+Verification: 53 unit tests, all six adventure stories, 18 finds, three postcards, completion/reload persistence, 24 town checks and all five original feature groups passed. Logs are permanent in `validation/2026-10-10-adventures/`. Player-copy scan: 0 BLOCK, 0 HIGH, 1 MED (short sentences reviewed for young readers).
+
+Run `npm run test:e2e:adventures` for the new end-to-end coverage. The test helper continues to mute speech in all browser contexts. This is Chromium touch emulation; physical iPhone Safari remains unverified.
+
 ## Implemented
 
 1. Four flying rides: unicorn, helicopter, airship and hot-air balloon. Keyboard and hold buttons control height. The walk button lands before dismounting. Roof landing surfaces and a height limit are included.
@@ -12,7 +22,7 @@ Status: 10 October 2026. Development continued in this Codex session after the c
 
 ## Verification
 
-- Unit suite: 48 passed.
+- Unit suite: 53 passed.
 - Feature browser tests: flying, clouds, floor editing, cloud placement, stairs, save reload, endless movement and all six worlds passed.
 - Endless view: 44 draw calls and 90,084 triangles in the recorded test (budget 260 / 1,100,000).
 - Café regression suite: 21/21 passed, including all 17 recipes. Town regression suite: 24/24 passed. Results are recorded in `validation/2026-10-10/town-results.json`.

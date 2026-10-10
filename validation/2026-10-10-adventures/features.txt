@@ -1,0 +1,9 @@
+
+> blossom-bay@1.0.0 test:e2e:features
+> node test/e2e/features.mjs
+
+Part 1: picker, keyboard climb, roof crossing, auto land, all touch rides PASS
+Part 2: Sky Lift, three walkable levels and height-aware zones PASS
+Part 3: free placement on clouds, independent floor editing, stairs and save reload PASS
+Part 4: walking beyond bounds, chunk streaming and performance PASS { chunks: 25, calls: 44, triangles: 90084 }
+Part 5: six worlds, return doors, carried avatar and ride, save safety, lava and performance PASS

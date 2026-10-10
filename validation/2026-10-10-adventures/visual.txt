@@ -1,0 +1,4 @@
+shot adventure-journal-final
+shot adventure-space-wide
+shot adventure-ice-wide
+errors: none

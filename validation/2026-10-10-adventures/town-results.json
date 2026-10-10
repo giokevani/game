@@ -1,0 +1,125 @@
+{
+  "results": [
+    {
+      "name": "boots with a Play button and a WebGL canvas",
+      "ok": true,
+      "ms": 11822
+    },
+    {
+      "name": "character creator: pick hair, name, start",
+      "ok": true,
+      "ms": 3001
+    },
+    {
+      "name": "welcome story starts and the tracker shows it",
+      "ok": true,
+      "ms": 1469
+    },
+    {
+      "name": "HUD fits the iPhone screen without overlaps",
+      "ok": true,
+      "ms": 5
+    },
+    {
+      "name": "walking moves the player and buildings block the way",
+      "ok": true,
+      "ms": 39194
+    },
+    {
+      "name": "jumping goes up and lands again",
+      "ok": true,
+      "ms": 14532
+    },
+    {
+      "name": "build mode: buy and place furniture, finish first task",
+      "ok": true,
+      "ms": 16232
+    },
+    {
+      "name": "walls, floors, doors and paint tools change the house",
+      "ok": true,
+      "ms": 1619
+    },
+    {
+      "name": "Pip gives an egg; caring for it hatches a pet",
+      "ok": true,
+      "ms": 12760
+    },
+    {
+      "name": "bakery: wrong cakes pay nothing, right cakes pay",
+      "ok": true,
+      "ms": 3621
+    },
+    {
+      "name": "florist and fishing pay out and fill collections",
+      "ok": true,
+      "ms": 2721
+    },
+    {
+      "name": "garden: plant, water, grow, harvest",
+      "ok": true,
+      "ms": 511
+    },
+    {
+      "name": "delivery job: reach the house before the timer",
+      "ok": true,
+      "ms": 7262
+    },
+    {
+      "name": "free play: every ride is free; the motorbike is faster than walking",
+      "ok": true,
+      "ms": 23415
+    },
+    {
+      "name": "swim in the lake, then sail a boat on the sea",
+      "ok": true,
+      "ms": 14173
+    },
+    {
+      "name": "build mode: a pinch never lays floor, and the Erase tool removes it",
+      "ok": true,
+      "ms": 1311
+    },
+    {
+      "name": "fishing is easy: cast, tap, reel",
+      "ok": true,
+      "ms": 3049
+    },
+    {
+      "name": "hot-air balloon flies to Sky Island and back",
+      "ok": true,
+      "ms": 103696
+    },
+    {
+      "name": "map fast travel to Town Square",
+      "ok": true,
+      "ms": 606
+    },
+    {
+      "name": "performance budget in town (draw calls, triangles)",
+      "ok": true,
+      "ms": 2876
+    },
+    {
+      "name": "menus open and close cleanly",
+      "ok": true,
+      "ms": 2903
+    },
+    {
+      "name": "save, reload, everything is still there",
+      "ok": true,
+      "ms": 7578
+    },
+    {
+      "name": "backup code restores a save",
+      "ok": true,
+      "ms": 8444
+    },
+    {
+      "name": "portrait mode asks to turn the phone",
+      "ok": true,
+      "ms": 2223
+    }
+  ],
+  "errors": []
+}

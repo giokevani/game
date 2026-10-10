@@ -27,7 +27,7 @@ export class HUD {
       build: mb('🔨', 'Build', () => game.openBuild(), 'build'),
       pets: mb('🐾', 'Pets', () => game.openPets(), 'pets'),
       bag: mb('🎒', 'Bag', () => game.openBag(), 'bag'),
-      quests: mb('📜', 'Tasks', () => game.openQuests(), 'quests'),
+      quests: mb('📖', 'Journal', () => game.openQuests(), 'quests'),
       map: mb('🗺️', 'Map', () => game.openMap(), 'map'),
       settings: mb('⚙️', 'Menu', () => game.openSettings(), 'settings'),
     };

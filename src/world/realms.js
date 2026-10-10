@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {World} from './world.js';
 import {Builder,rng} from '../engine/builder.js';
 import * as UI from '../ui/ui.js';
+import {STORIES} from '../adventures/story.js';
 export const REALMS=[
  {id:'space',name:'Space',icon:'🚀',sky:'#111638',ground:'#8f90ae',accent:'#a8eaff',gravity:8},
  {id:'heaven',name:'Heaven',icon:'😇',sky:'#bddfff',ground:'#fffafd',accent:'#ffd45e',gravity:30},
@@ -28,7 +29,8 @@ export class MagicDoors {
   const world=new World(scene,this.game.quality.level,{height:()=>0,waterY:-100});world.zoneAt=()=>({id:r.id,name:r.name,icon:r.icon});
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(800,800).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:r.ground,roughness:.9}));scene.add(ground);
   const b=new Builder(),rand=rng(REALMS.indexOf(r)+21);
-  for(let i=0;i<65;i++){const x=(rand()-.5)*170,z=(rand()-.5)*170;if(Math.hypot(x,z)<14)continue;
+  const story=STORIES.find(s=>s.id===r.id);
+  for(let i=0;i<65;i++){const x=(rand()-.5)*170,z=(rand()-.5)*170;if(Math.hypot(x,z)<14||(Math.abs(x)<5&&z>-35&&z<0)||story.spots.some(([sx,sz])=>Math.hypot(x-sx,z-sz)<5)||Math.hypot(x,z+17)<6)continue;
    if(r.id==='space'){b.ico(1+rand()*2,r.ground,x,.4,z,{detail:0});b.torus(1.5,.2,r.accent,x,2,z,{ts:12});}
    if(r.id==='heaven'){b.sphere(4,'#ffffff',x,1,z,{sy:.3,ws:8,hs:6});b.cyl(.3,.3,5,'#fff4e6',x,0,z,{seg:8});b.torus(1.5,.2,r.accent,x,5.2,z,{rx:Math.PI/2,ts:12});}
    if(r.id==='hell'){b.cone(2.5,4,r.ground,x,0,z,{seg:7});b.sphere(.8,r.accent,x,4.5,z,{ws:6,hs:5});}
@@ -41,7 +43,8 @@ export class MagicDoors {
   b.box(12,7,8,r.accent,0,0,-40);for(const x of [-7,7]){b.cyl(2,2,10,'#fff4e6',x,0,-40,{seg:8});b.cone(2.4,4,r.accent,x,10,-40,{seg:8});}
   const decor=new THREE.Mesh(b.build({ao:.1}),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.7}));scene.add(decor);world.addBox(-6,-44,6,-36,{top:7});
   if(r.id==='hell'){const lava=new THREE.Mesh(new THREE.CircleGeometry(8,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#ff9a52'}));lava.position.set(20,.05,-15);scene.add(lava);}
-  this.door(scene,world,{x:0,y:0,z:8},{name:'Back to Blossom Bay',icon:'🏠',accent:'#ffcce4'},()=>this.travel('home'));
+  // Keep the return door beside the path, clear of the arrival camera.
+  this.door(scene,world,{x:12,y:0,z:8},{name:'Back to Blossom Bay',icon:'🏠',accent:'#ffcce4'},()=>this.travel('home'));
   const particles=new THREE.Points(new THREE.BufferGeometry(),new THREE.PointsMaterial({color:r.accent,size:.25,transparent:true,opacity:.7}));const pos=[];for(let i=0;i<180;i++)pos.push((rand()-.5)*150,rand()*20,(rand()-.5)*150);particles.geometry.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));scene.add(particles);
   const sky={t:this.home.sky.t,state:{night:r.id==='space'?1:0},update(dt){particles.rotation.y+=dt*.01;},setShadowSize(){}};
   return {scene,world,sky,definition:r};
@@ -52,6 +55,7 @@ export class MagicDoors {
   const dest=id==='home'?this.home:(this.cache.get(id)||this.make(r));if(id!=='home')this.cache.set(id,dest);
   for(const e of [...g.buildings.entries])g.buildings.removeViews(e);
   g.scene=dest.scene;g.world=dest.world;g.sky=dest.sky;g.player.world=g.world;g.rig.world=g.world;g.realm=id;g.player.gravity=r?.gravity||30;g.player.bounds=id==='home'?null:{minX:-180,maxX:180,minZ:-180,maxZ:180};
+  g.adventures?.attach(id);
   for(const o of [g.avatar.root,g.pets?.actor?.model.group,g.fx.points,g.vehicles.riding?.model.group])if(o)g.scene.add(o);
   if(id==='home'){const p=this.returnSpot||doorSpot(0);g.player.teleport(p.x,0,p.z+4);}else g.player.teleport(0,0,4);
   for(const b of g.state.buildings)if(b.realm===id)g.buildings.createViews(b);

@@ -56,13 +56,14 @@ Single player only. No chat, no ads, no in-app purchases, no accounts, and no da
 | Furniture | 116 items in 10 categories, 12 colours each, with sit, sleep, cook, bath and TV interactions |
 | Pets | 30 species from 6 eggs, 5 growth stages with tricks, 10 needs, accessories |
 | Jobs | Blossom Kitchen café (see below), bakery, florist, fishing, gardening, delivery |
-| Story | 30 tasks in 5 chapters, 14 townsfolk |
+| Adventures | Six world keepers with connected stories, 18 discoveries, a saved journal, camera-aware clue compass, three hidden cloud postcards and a friendship constellation finale. Town tasks remain available in the journal. |
+| Town story | 30 tasks in 5 chapters, 14 townsfolk |
 | Collections | 60 stickers, 40 hidden shells, 16 fish, 10 plants |
 | Rides | 14 free rides, including a flying unicorn, helicopter, airship and hot-air balloon. Hold ▲ / ▼ to climb or descend. Tap 🚶 to land and get off. |
 | Exploration | Endless terrain loads around you, with offshore islands. Six beach doors lead to Space, Heaven, Hell, Candy Land, Underwater Kingdom and Ice Kingdom. Each has a door home. |
 | Extras | Outfits shop, balloon trip to Sky Island, day and night, rain and rainbows, music |
 
-Play time: a simulation of a typical player (`npm run sim`), who spends half of her job time cooking in the café, finishes the story in 10.4–10.9 hours across three random seeds. Owning every piece of furniture takes about 13.5–14.5 hours, and collecting all 30 pets takes longer still. These figures come from a model, not from watching a real child play; see the assumptions at the top of `test/sim/economy.mjs`.
+Explore at your own pace. The world adventures have no timer, and their progress stays in the same browser save as her house and pets.
 
 ## 🍳 The Blossom Kitchen café
 
@@ -85,6 +86,7 @@ npm run dev        # local server
 npm test           # unit tests (logic, catalogues, reachability)
 npm run build
 npm run test:e2e:features # flying, clouds, building, terrain and worlds
+npm run test:e2e:adventures # six stories, discoveries, postcards and saved progress
 npm run test:e2e   # end-to-end tests in headless Chromium (iPhone 11 Pro emulation)
 npm run sim        # economy / pacing simulation
 npm run test:e2e:cafe # café end-to-end test (walk in, cook by touch, walk out)
