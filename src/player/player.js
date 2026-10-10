@@ -3,6 +3,7 @@ import { WATER_Y } from '../world/terrain.js';
 import { WORLD } from '../data/map.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
+export const MAX_FLY_Y = 320; // highest a flying ride can go
 
 export class Player {
   constructor(world, avatar) {
@@ -23,6 +24,7 @@ export class Player {
     this.onLand = null;
     this.distance = 0;
     this.swimming = false;
+    this.bounds = WORLD; // null = no edge
   }
 
   get object() { return this.avatar.root; }
@@ -79,6 +81,7 @@ export class Player {
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       this.facing += diff * Math.min(1, (this.vehicle ? 6 : 12) * dt);
     }
+    if (this.vehicle?.fly) return this.fly(dt, input);
     if (!this.frozen && input.consumeJump() && this.grounded && !this.vehicle && !this.swimming) {
       this.vel.y = this.jumpV;
       this.grounded = false;
@@ -94,8 +97,7 @@ export class Player {
     const depth = WATER_Y - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
     const boat = this.vehicle?.water;
     if ((boat && depth < 0.6) || (this.vehicle && !boat && depth > 0.5)) { this.pos.x = prevX; this.pos.z = prevZ; this.vel.x *= -0.2; this.vel.z *= -0.2; }
-    this.pos.x = Math.max(WORLD.minX, Math.min(WORLD.maxX, this.pos.x));
-    this.pos.z = Math.max(WORLD.minZ, Math.min(WORLD.maxZ, this.pos.z));
+    this.clampBounds();
     const deepNow = WATER_Y - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
     this.swimming = !this.vehicle && !this.seat && deepNow > 1.0 && this.pos.y < WATER_Y + 1.5;
     if (boat || this.swimming) {
@@ -135,6 +137,43 @@ export class Player {
     this.distance += hs * dt;
     this.moveAmt = hs / this.speed;
     av.update(dt, this.vehicle ? 0 : Math.min(1, this.moveAmt), !this.grounded);
+    this.sync();
+  }
+
+  clampBounds() {
+    const b = this.bounds;
+    if (!b) return;
+    this.pos.x = Math.max(b.minX, Math.min(b.maxX, this.pos.x));
+    this.pos.z = Math.max(b.minZ, Math.min(b.maxZ, this.pos.z));
+  }
+
+  // flying rides: no gravity; ▲ ▼ climb and sink, and she can land on the
+  // ground, on a roof or on a cloud
+  fly(dt, input) {
+    const v = this.vehicle;
+    const axis = v.autoLand ? -1 : this.frozen ? 0 : input.flyAxis();
+    input.consumeJump();
+    const climb = v.autoLand ? Math.max(24, v.climb * 3) : v.climb;
+    this.vel.y += (axis * climb - this.vel.y) * Math.min(1, (v.autoLand ? 12 : 5) * dt);
+    this.pos.x += this.vel.x * dt;
+    this.pos.z += this.vel.z * dt;
+    this.world.resolve(this.pos, 0.9, this.pos.y);
+    this.clampBounds();
+    const previousY = this.pos.y;
+    this.pos.y = Math.min(MAX_FLY_Y, this.pos.y + this.vel.y * dt);
+    // skim the water instead of sinking into it
+    const g = Math.max(this.world.groundAt(this.pos.x, this.pos.z, Math.max(previousY, this.pos.y)), this.world.waterY ?? WATER_Y);
+    if (this.pos.y <= g + 0.001) {
+      this.pos.y = g;
+      if (this.vel.y < 0) this.vel.y = 0;
+      this.grounded = true;
+      this.lastSafe.copy(this.pos);
+    } else this.grounded = false;
+    this.swimming = false;
+    const hs = Math.hypot(this.vel.x, this.vel.z);
+    this.distance += hs * dt;
+    this.moveAmt = hs / this.speed;
+    this.avatar.update(dt, 0, false);
     this.sync();
   }
 

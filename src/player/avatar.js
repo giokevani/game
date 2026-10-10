@@ -374,6 +374,9 @@ export class Avatar {
       lL = st * 0.5; lR = -st * 0.5; lean = 0.25 + speed * 1.0; bodyY = Math.sin(t * 2.2) * 0.04; hipsY = 0.72;
     } else if (this.pose === 'sit' || this.pose === 'drive') {
       lL = lR = -1.45; aL = aR = this.pose === 'drive' ? -0.9 : -0.25; hipsY = 0.5; lean = -0.05; bodyY = 0;
+    } else if (this.pose === 'ride') {
+      // on horseback: legs hang down the sides, hands on the reins
+      lL = lR = -0.5; aL = aR = -0.95; aLz = 0.2; aRz = -0.2; hipsY = 0.62; lean = 0.1; bodyY = 0;
     } else if (this.pose === 'sleep') {
       lL = lR = 0; aL = aR = 0; hipsY = 0.72; rootTilt = -Math.PI / 2; bodyY = 0;
     } else if (air) {

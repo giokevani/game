@@ -62,7 +62,7 @@ export class Game {
     this.rig = new CameraRig(camera, this.world);
     this.rig.yaw = this.player.facing + Math.PI;
     this.rig.snap(this.player.pos);
-    this.cameraOpts = () => ({ distMul: this.player.vehicle ? 1.4 : 1 });
+    this.cameraOpts = () => ({ distMul: this.player.vehicle ? (this.vehicles?.riding?.v.cam ?? 1.4) : 1 });
 
     this.input = new Input(renderer.domElement, UI.root());
     this.hud = new HUD(this);

@@ -28,13 +28,13 @@ export class World {
       for (let cz = Math.floor(z1 / CELL); cz <= Math.floor(z2 / CELL); cz++) fn(`${cx},${cz}`);
   }
   addBox(x1, z1, x2, z2, o = {}) {
-    const b = { x1: Math.min(x1, x2), z1: Math.min(z1, z2), x2: Math.max(x1, x2), z2: Math.max(z1, z2), top: o.top ?? 99, tag: o.tag, off: false };
+    const b = { x1: Math.min(x1, x2), z1: Math.min(z1, z2), x2: Math.max(x1, x2), z2: Math.max(z1, z2), top: o.top ?? 99, bot: o.bot ?? -Infinity, tag: o.tag, off: false };
     this._cells(b.x1, b.z1, b.x2, b.z2, (k) => { if (!this.grid.has(k)) this.grid.set(k, []); this.grid.get(k).push(b); });
     this.boxes.push(b);
     return b;
   }
   addCircle(x, z, r, o = {}) {
-    const c = { x, z, r, circle: true, top: o.top ?? 99, tag: o.tag, off: false };
+    const c = { x, z, r, circle: true, top: o.top ?? 99, bot: o.bot ?? -Infinity, tag: o.tag, off: false };
     this._cells(x - r, z - r, x + r, z + r, (k) => { if (!this.grid.has(k)) this.grid.set(k, []); this.grid.get(k).push(c); });
     this.circles.push(c);
     return c;
@@ -62,7 +62,7 @@ export class World {
         for (const c of list) {
           if (c.off || (iter === 0 && seen.has(c))) continue;
           seen.add(c);
-          if (feetY > c.top - 0.05) continue;
+          if (feetY + 1.8 < c.bot || feetY > c.top - 0.05) continue;
           if (c.circle) {
             const dx = pos.x - c.x, dz = pos.z - c.z;
             const d = Math.hypot(dx, dz), m = c.r + radius;
@@ -96,7 +96,7 @@ export class World {
     const list = this.grid.get(`${Math.floor(x / CELL)},${Math.floor(z / CELL)}`);
     if (!list) return false;
     for (const c of list) {
-      if (c.off || c.tag === 'house' || c.tag === 'furn' || y > c.top) continue;
+      if (c.off || c.tag === 'house' || c.tag === 'furn' || y > c.top || y + 1.8 < c.bot) continue;
       if (c.circle) { if (c.r > 1.2 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.r * c.r) return true; }
       else if (x > c.x1 && x < c.x2 && z > c.z1 && z < c.z2) return true;
     }
@@ -136,7 +136,7 @@ export class World {
     for (const it of this.interactables) {
       if (!it.enabled()) continue;
       const d = Math.hypot(pos.x - it.x, pos.z - it.z);
-      if (d < it.r && Math.abs(pos.y - (it.y || 0)) < 4 && d < bd) { bd = d; best = it; }
+      if (d < it.r && Math.abs(pos.y - (it.y || 0)) < (it.dy ?? 4) && d < bd) { bd = d; best = it; }
     }
     return best;
   }
@@ -171,10 +171,13 @@ export class World {
       put(p, b.x, 0, b.z, b.face, { aoHeight: 1.2 });
       const rot = Math.abs(Math.sin(b.face)) > 0.5;
       const hw = (rot ? b.d : b.w) / 2, hd = (rot ? b.w : b.d) / 2;
-      if (b.kind === 'lighthouse') this.addCircle(b.x, b.z, 3.2);
-      else if (b.kind === 'cave') this.addCircle(b.x - 2, b.z, 6.5);
-      else if (b.kind === 'stand') this.addBox(b.x - hw, b.z - hd * 0.5, b.x + hw, b.z + hd * 0.6);
-      else this.addBox(b.x - hw, b.z - hd, b.x + hw, b.z + hd);
+      // tops are the real heights, so flying rides can pass over the roofs
+      const top = { lighthouse: 24, cave: 10, stand: 5, townhall: 13, house: 8.5 }[b.kind] ?? 8;
+      if (b.kind === 'lighthouse') this.addCircle(b.x, b.z, 3.2, { top });
+      else if (b.kind === 'cave') this.addCircle(b.x - 2, b.z, 6.5, { top });
+      else if (b.kind === 'stand') this.addBox(b.x - hw, b.z - hd * 0.5, b.x + hw, b.z + hd * 0.6, { top });
+      else this.addBox(b.x - hw, b.z - hd, b.x + hw, b.z + hd, { top });
+      if (b.kind !== 'stand' && b.kind !== 'cave') this.addPlatform({ x1: b.x - hw, z1: b.z - hd, x2: b.x + hw, z2: b.z + hd, y: top });
       if (b.kind === 'townhall') {
         for (let i = -2; i <= 2; i++) if (i) this.addCircle(b.x + i * 2.3, b.z + b.d / 2 + 1.4, 0.45);
       }
@@ -249,7 +252,7 @@ export class World {
     // sky island (far above the park)
     put(B.skyIsland(SKY_ISLAND.r), SKY_ISLAND.x, SKY_ISLAND.y, SKY_ISLAND.z, 0, { aoHeight: 1, aoBase: -2 });
     this.addPlatform({ x: SKY_ISLAND.x, z: SKY_ISLAND.z, r: SKY_ISLAND.r, y: SKY_ISLAND.y + 0.15 });
-    this.addBox(SKY_ISLAND.x - 5.5, SKY_ISLAND.z - 12.5, SKY_ISLAND.x + 5.5, SKY_ISLAND.z - 4, { top: SKY_ISLAND.y + 8 });
+    this.addBox(SKY_ISLAND.x - 5.5, SKY_ISLAND.z - 12.5, SKY_ISLAND.x + 5.5, SKY_ISLAND.z - 4, { bot: SKY_ISLAND.y, top: SKY_ISLAND.y + 8 });
 
     // cave gate boulders (removed by a quest)
     const gate = new Builder();

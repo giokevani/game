@@ -291,3 +291,7 @@ canvas.mg-canvas { border-radius: 18px; background: #fff; box-shadow: 0 3px 0 #e
 #ui .build-drawer, #ui .build-bar, #ui .place-bar, #ui .build-top, #ui .swatches, #ui .strip, #ui .tabs, #ui .dialog, #ui .mg { pointer-events: auto; }
 .build-drawer.short { bottom: auto; }
 .build-drawer .icon-tabs .tab { font-size: 19px; padding: 4px 7px; }
+
+/* ▲ ▼ buttons while flying */
+.fly-box { flex-direction: column; gap: 10px; margin-top: 10px; align-items: center; }
+.fly-btn { width: 58px; height: 58px; font-size: 24px; touch-action: none; }

@@ -1,5 +1,6 @@
 // Rides (all free): bikes, motorbike and cars on land, three boats on the
-// sea and the lake, plus the hot-air balloon to Sky Island.
+// sea and the lake, and four rides that fly (a unicorn, a helicopter, an
+// airship and a hot-air balloon), plus the balloon trip to Sky Island.
 import * as THREE from 'three';
 import { Builder, Geo, shade } from '../engine/builder.js';
 import { M } from '../engine/materials.js';
@@ -24,6 +25,11 @@ export const VEHICLES = [
   { id: 'rowboat', name: 'Row Boat', icon: '🚣', price: 0, lvl: 1, speed: 6.5, seatY: 0.25, water: true },
   { id: 'motorboat', name: 'Speed Boat', icon: '🚤', price: 0, lvl: 1, speed: 17, seatY: 0.45, water: true },
   { id: 'yacht', name: 'Little Yacht', icon: '🛥️', price: 0, lvl: 1, speed: 11, seatY: 0.95, water: true },
+  // flying rides: climb = metres per second up or down, cam = camera distance
+  { id: 'unicorn', name: 'Flying Unicorn', icon: '🦄', price: 0, lvl: 1, speed: 16, climb: 9, seatY: 0.9, fly: true, pose: 'ride', cam: 1.6 },
+  { id: 'helicopter', name: 'Helicopter', icon: '🚁', price: 0, lvl: 1, speed: 24, climb: 12, seatY: 0.55, fly: true, cam: 1.9 },
+  { id: 'airship', name: 'Airship', icon: '🎈', price: 0, lvl: 1, speed: 13, climb: 7, seatY: 0.42, fly: true, stand: true, cam: 2.6 },
+  { id: 'balloon', name: 'Hot-Air Balloon', icon: '🎈', price: 0, lvl: 1, speed: 8, climb: 6, seatY: 0.16, fly: true, stand: true, cam: 2.4 },
 ];
 export const VEHICLE = Object.fromEntries(VEHICLES.map((v) => [v.id, v]));
 const VCOLORS = ['#ff8fc0', '#7fc6ff', '#ffd45e', '#6fd6b3', '#b58cff', '#ffffff', '#ff6f6f'];
@@ -33,7 +39,140 @@ function wheel(b, x, y, z, r = 0.22, w = 0.12) {
   b.cyl(r * 0.5, r * 0.5, w + 0.02, '#e8e4f0', x, y, z, { rz: Math.PI / 2, seg: 10, center: true });
 }
 
+// a leg or wing that swings around its top end
+function pivotMesh(build, x, y, z, mat = M.std) {
+  const b = new Builder();
+  build(b);
+  const m = new THREE.Mesh(b.build({ ao: 0 }), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  return m;
+}
+
+const RAINBOW = ['#ff7b9c', '#ffb36b', '#ffe066', '#8fe39a', '#7fc6ff', '#b58cff'];
+
+function flyingModel(id, col) {
+  const b = new Builder();
+  const group = new THREE.Group();
+  const parts = { legs: [], wings: [], rotors: [], props: [] };
+  let glass = null;
+  if (id === 'unicorn') {
+    const W = '#fffafd';
+    b.sphere(0.5, W, 0, 1.08, 0, { sx: 0.95, sy: 0.9, sz: 1.65, ws: 16, hs: 12 });
+    b.cyl(0.19, 0.26, 0.85, W, 0, 1.62, 0.66, { rx: 0.55, seg: 12, center: true });
+    b.sphere(0.27, W, 0, 2.02, 0.95, { sx: 0.9, sy: 0.95, sz: 1.35 });
+    b.sphere(0.17, '#ffe3ef', 0, 1.93, 1.22, { sx: 1.0, sy: 0.85, sz: 1.0 });
+    for (const s of [-1, 1]) {
+      b.sphere(0.055, '#3a3446', s * 0.17, 2.08, 1.1);
+      b.sphere(0.02, '#ffffff', s * 0.185, 2.1, 1.14);
+      b.cone(0.07, 0.2, W, s * 0.12, 2.22, 0.82, { rx: -0.2, seg: 6 });
+      b.sphere(0.03, '#ff9ac1', s * 0.08, 1.9, 1.38);
+    }
+    b.cone(0.065, 0.48, '#ffd45e', 0, 2.38, 1.04, { rx: 0.55, seg: 8 });
+    // rainbow mane and tail
+    for (let i = 0; i < 6; i++) {
+      const t = i / 5;
+      b.sphere(0.13, RAINBOW[i], 0, 2.2 - t * 0.75, 0.86 - t * 0.48, { ws: 8, hs: 6 });
+      b.sphere(0.12, RAINBOW[i], 0, 1.18 - t * 0.38, -0.88 - t * 0.22 - Math.sin(t * 3) * 0.08, { ws: 8, hs: 6 });
+    }
+    // saddle
+    b.box(0.62, 0.1, 0.62, col, 0, 1.47, -0.05, { r: 0.05 });
+    b.box(0.66, 0.36, 0.06, shade(col, 0.85), 0, 1.15, -0.05, { r: 0.02 });
+    for (const [x, z] of [[-0.24, 0.5], [0.24, 0.5], [-0.24, -0.5], [0.24, -0.5]]) {
+      const leg = pivotMesh((lb) => {
+        lb.cyl(0.085, 0.1, 0.78, W, 0, -0.78, 0, { seg: 8 });
+        lb.cyl(0.11, 0.11, 0.12, '#ffd45e', 0, -0.86, 0, { seg: 10 });
+      }, x, 0.9, z);
+      parts.legs.push(leg);
+      group.add(leg);
+    }
+    const feather = Geo.shape('wingFeather', [[0, 0], [0.25, 0.18], [0.75, 0.3], [1.15, 0.22], [1.0, 0.02], [0.75, -0.12], [0.4, -0.18]], 0.04, 0.01);
+    for (const s of [-1, 1]) {
+      const wing = pivotMesh((wb) => {
+        wb.add(feather, '#ffffff', 0, 0, 0, 0, 0, 0, s, 1, 1);
+        wb.add(feather, '#ffe3f4', s * 0.05, -0.08, 0.03, 0, 0, 0, s * 0.8, 0.8, 1);
+      }, s * 0.32, 1.42, 0.3);
+      wing.userData.side = s;
+      wing.rotation.y = s * -Math.PI / 2;
+      parts.wings.push(wing);
+      group.add(wing);
+    }
+  } else if (id === 'helicopter') {
+    b.box(1.5, 1.0, 2.2, col, 0, 0.35, -0.2, { r: 0.4 });
+    b.box(1.46, 0.2, 2.1, '#ffffff', 0, 0.62, -0.2, { r: 0.08 });
+    b.cyl(0.18, 0.28, 2.6, col, 0, 1.0, -2.3, { rx: Math.PI / 2, seg: 10, center: true });
+    b.box(0.08, 0.9, 0.6, shade(col, 0.85), 0, 1.0, -3.5, { r: 0.04 });
+    b.box(0.9, 0.08, 0.4, shade(col, 0.85), 0, 1.0, -3.3, { r: 0.03 });
+    b.cyl(0.12, 0.12, 0.5, '#5b5468', 0, 1.36, -0.2, { seg: 8 });
+    for (const s of [-1, 1]) {
+      b.box(0.08, 0.08, 2.4, '#5b5468', s * 0.7, 0.0, -0.1, { r: 0.04 });
+      for (const z of [-0.6, 0.5]) b.cyl(0.04, 0.04, 0.38, '#5b5468', s * 0.68, 0.02, z, { seg: 6, rz: s * 0.25 });
+    }
+    b.box(0.8, 0.35, 0.6, '#3a3446', 0, 0.4, -0.55, { r: 0.1 });
+    const gb = new Builder();
+    gb.sphere(0.8, '#cfefff', 0, 0.95, 0.5, { sx: 0.95, sy: 0.75, sz: 0.95, ws: 16, hs: 10 });
+    glass = new THREE.Mesh(gb.build({ ao: 0 }), M.glass);
+    const rotor = pivotMesh((rb) => {
+      rb.box(6.4, 0.05, 0.28, '#4a4458', 0, 0, 0, { r: 0.02 });
+      rb.box(0.28, 0.05, 6.4, '#4a4458', 0, 0, 0, { r: 0.02 });
+      rb.cyl(0.22, 0.22, 0.16, '#ffd45e', 0, -0.05, 0, { seg: 10 });
+    }, 0, 1.62, -0.2);
+    parts.rotors.push(rotor);
+    const tail = pivotMesh((tb) => {
+      tb.box(0.04, 1.1, 0.16, '#4a4458', 0, -0.55, 0, { r: 0.01 });
+      tb.box(0.04, 0.16, 1.1, '#4a4458', 0, -0.08, 0, { r: 0.01 });
+    }, 0.1, 1.1, -3.55);
+    tail.userData.axis = 'x';
+    parts.props.push(tail);
+    group.add(rotor, tail);
+  } else if (id === 'airship') {
+    b.sphere(1, '#fff6ea', 0, 4.7, -0.4, { sx: 2.1, sy: 2.0, sz: 5.2, ws: 24, hs: 16 });
+    for (let i = -2; i <= 2; i++) b.torus(1.95 - Math.abs(i) * 0.12, 0.07, col, 0, 4.7, -0.4 + i * 1.6, { ts: 28 });
+    for (const [rx, rz, w, h] of [[0, 0, 0.1, 1.6], [Math.PI / 2, 0, 0.1, 1.6]]) {
+      b.box(rz ? h : w, rx ? w : h, 1.5, col, 0, 4.7 - (rx ? 0.05 : 0.8), -5.2, { r: 0.04 });
+      void rz;
+    }
+    b.box(3.2, 0.1, 1.4, col, 0, 4.65, -5.1, { r: 0.04 });
+    b.box(0.1, 3.0, 1.4, col, 0, 3.2, -5.1, { r: 0.04 });
+    // gondola with a railing: she stands inside
+    b.box(1.6, 0.5, 2.6, '#c98a4b', 0, 0, 0, { r: 0.12 });
+    b.box(1.5, 0.06, 2.5, '#e8c08a', 0, 0.38, 0, { r: 0.03 });
+    for (const s of [-1, 1]) {
+      b.box(0.06, 0.06, 2.6, '#ffffff', s * 0.78, 1.15, 0, { r: 0.02 });
+      for (const z of [-1.2, -0.4, 0.4, 1.2]) b.cyl(0.03, 0.03, 0.7, '#ffffff', s * 0.78, 0.48, z, { seg: 6 });
+    }
+    b.box(1.6, 0.06, 0.06, '#ffffff', 0, 1.15, 1.28, { r: 0.02 });
+    b.box(1.6, 0.06, 0.06, '#ffffff', 0, 1.15, -1.28, { r: 0.02 });
+    for (const [x, z] of [[-0.7, -1.1], [0.7, -1.1], [-0.7, 1.1], [0.7, 1.1]]) b.cyl(0.025, 0.025, 2.6, '#8a7a6a', x, 1.15, z, { seg: 5 });
+    for (let i = 0; i < 6; i++) b.sphere(0.14, RAINBOW[i], -1.1 + i * 0.44, 2.75, 1.25);
+    const prop = pivotMesh((pb) => {
+      pb.box(0.12, 1.6, 0.05, '#4a4458', 0, 0, 0, { r: 0.03 });
+      pb.box(1.6, 0.12, 0.05, '#4a4458', 0, 0, 0, { r: 0.03 });
+      pb.sphere(0.14, '#ffd45e', 0, 0, 0.05);
+    }, 0, 0.35, -1.55);
+    prop.userData.axis = 'z';
+    parts.props.push(prop);
+    group.add(prop);
+  } else if (id === 'balloon') {
+    const bb = balloonModel();
+    const g = bb.build({ ao: 0 });
+    g.scale(0.82, 0.82, 0.82);
+    const m = new THREE.Mesh(g, M.std);
+    m.position.y = -0.12;
+    m.castShadow = true;
+    group.add(m);
+  }
+  if (b.parts.length) {
+    const body = new THREE.Mesh(b.build({ ao: 0.12, aoHeight: 0.6 }), M.gloss);
+    body.castShadow = true;
+    group.add(body);
+  }
+  if (glass) group.add(glass);
+  return { group, wheels: [], parts };
+}
+
 export function vehicleModel(id, col) {
+  if (VEHICLE[id]?.fly) return flyingModel(id, col);
   const b = new Builder();
   const wheels = [];
   if (id === 'scooter') {
@@ -152,6 +291,14 @@ export class VehicleSystem {
     // ride button
     this.btn = h('button', { class: 'round-btn', style: { width: '54px', height: '54px', fontSize: '26px', display: 'none' }, onpointerdown: (e) => { e.stopPropagation(); click(); this.toggle(); } }, '🚗');
     game.hud.rideSlot.appendChild(this.btn);
+    // ▲ ▼ buttons while flying (hold them)
+    const hold = (label, key) => {
+      const set = (v) => (e) => { e.stopPropagation(); game.input[key] = v; };
+      return h('button', { class: 'round-btn fly-btn', 'data-fly': key, onpointerdown: set(true), onpointerup: set(false), onpointercancel: set(false), onpointerleave: set(false) }, label);
+    };
+    this.flyBox = h('div', { class: 'fly-box', style: { display: 'none' } }, hold('▲', 'flyUpHeld'), hold('▼', 'flyDownHeld'));
+    game.hud.rideSlot.appendChild(this.flyBox);
+    window.addEventListener('pointerup', () => { game.input.flyUpHeld = false; game.input.flyDownHeld = false; });
     this.refreshBtn();
     // balloon
     this.balloon = balloonModel();
@@ -180,7 +327,7 @@ export class VehicleSystem {
 
   // the 🚗 button: get off, or pick any ride
   toggle() {
-    if (this.riding) return this.dismount();
+    if (this.riding) return this.dismount(false);
     this.picker();
   }
 
@@ -190,11 +337,20 @@ export class VehicleSystem {
       const group = (title, list) => {
         b.appendChild(h('div', { class: 'section-title' }, title));
         const row = h('div', { class: 'grid', style: { gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))' } });
-        for (const v of list) row.appendChild(h('button', { class: 'card', onclick: () => { click(); close(); this.ride(v.id); } },
-          h('div', { class: 'thumb', style: { fontSize: '44px', width: '64px', height: '64px' } }, v.icon), h('div', { class: 'nm' }, v.name)));
+        for (const v of list) {
+          let pic = v.icon;
+          if (v.fly) {
+            pic = h('img', { alt: '' });
+            const col = this.st.owned.vehicleColor[v.id] || VCOLORS[0];
+            lazyThumb(pic, () => renderObject(vehicleModel(v.id, col).group, `v:${v.id}:${col}`), `v:${v.id}:${col}`);
+          }
+          row.appendChild(h('button', { class: 'card', 'data-ride': v.id, onclick: () => { click(); close(); this.ride(v.id); } },
+            h('div', { class: 'thumb', style: { fontSize: '44px', width: '64px', height: '64px' } }, pic), h('div', { class: 'nm' }, v.name)));
+        }
         b.appendChild(row);
       };
-      group('On land', VEHICLES.filter((v) => !v.water));
+      group('In the sky ✨ (hold ▲ to fly up, ▼ to go down)', VEHICLES.filter((v) => v.fly));
+      group('On land', VEHICLES.filter((v) => !v.water && !v.fly));
       group('On water 🌊 (sea or lake)', VEHICLES.filter((v) => v.water));
       b.appendChild(h('div', { class: 'muted', style: { marginTop: '8px' } }, 'All rides are free! Change colours at Zoom Rides. Tap 🚶 to get off.'));
     }, { narrow: false });
@@ -206,12 +362,11 @@ export class VehicleSystem {
     const v = VEHICLE[id];
     const house = g.state.house;
     if (HM.insideHouse(house, g.player.pos.x - ORIGIN.x, g.player.pos.z - ORIGIN.z)) return toast('No driving inside the house! 😄', { icon: '🏠' });
-    if (g.player.pos.y > 40) return toast('Rides stay on the ground!', { icon: '☁️' });
     if (v.water) {
       const spot = this.findWater(g.player.pos);
       if (!spot) return this.askWater(id);
       g.player.teleport(spot.x, WATER_Y, spot.z, g.player.facing);
-    } else if (g.player.swimming) return toast('Swim to the shore first, then hop on! 🏊', { icon: '🌊' });
+    } else if (g.player.swimming && !v.fly) return toast('Swim to the shore first, then hop on! 🏊', { icon: '🌊' });
     this.st.owned.vehicleActive = id;
     this.mount(id);
   }
@@ -251,19 +406,26 @@ export class VehicleSystem {
     const v = VEHICLES.find((x) => x.id === id);
     const model = vehicleModel(id, this.st.owned.vehicleColor[id] || VCOLORS[0]);
     g.scene.add(model.group);
-    this.riding = { v, model, spin: 0 };
-    g.player.vehicle = { speed: v.speed, seatY: v.seatY, water: !!v.water };
+    this.riding = { v, model, spin: 0, flap: 0, trailT: 0 };
+    g.player.vehicle = { speed: v.speed, seatY: v.seatY, water: !!v.water, fly: !!v.fly, climb: v.climb || 0 };
     g.player.swimming = false;
-    g.avatar.pose = v.stand ? 'stand' : 'drive';
-    g.fx.burst(g.player.pos, 'puff');
-    g.audio?.play('vroom');
+    g.avatar.pose = v.pose || (v.stand ? 'stand' : 'drive');
+    g.fx.burst(g.player.pos, v.id === 'unicorn' ? 'sparkle' : 'puff');
+    g.audio?.play(v.id === 'unicorn' ? 'sparkle' : 'vroom');
+    if (v.fly && !this.st.stats.flyTip) { this.st.stats.flyTip = 1; toast('Hold ▲ to fly up and ▼ to go down!', { icon: v.icon, time: 3500 }); }
     g.emit('ride', id);
     this.refreshBtn();
   }
 
-  dismount() {
+  // high up in the sky she lands first, then gets off
+  dismount(now = true) {
     const g = this.game;
     if (!this.riding) return;
+    const pv = g.player.vehicle;
+    if (!now && pv?.fly && !g.player.grounded && this.heightAboveGround() > 4) {
+      if (!pv.autoLand) { pv.autoLand = true; toast('Landing… 🛬', { icon: this.riding.v.icon, time: 1500 }); }
+      return;
+    }
     g.scene.remove(this.riding.model.group);
     this.riding = null;
     g.player.vehicle = null;
@@ -276,6 +438,14 @@ export class VehicleSystem {
     g.player.sync();
     this.refreshBtn();
   }
+
+  heightAboveGround() {
+    const p = this.game.player.pos;
+    const W = this.game.world;
+    return p.y - Math.max(W.groundAt(p.x, p.z, p.y), W.waterY ?? WATER_Y);
+  }
+
+  get flying() { return !!this.riding?.v.fly; }
 
   wasBoat(g) { return WATER_Y - g.world.groundAt(g.player.pos.x, g.player.pos.z, 5) >= 0.8; }
 
@@ -321,6 +491,42 @@ export class VehicleSystem {
     });
   }
 
+  // legs gallop on the ground and tuck up in the air, wings flap, rotors spin
+  animateFlyer(dt, game, r, sp) {
+    const p = game.player;
+    const air = !p.grounded;
+    const t = game.time;
+    const parts = r.model.parts;
+    r.flap += dt * (air ? 9 : 2.5);
+    parts.legs.forEach((leg, i) => {
+      const want = air ? (i < 2 ? -0.9 : 0.8) : Math.sin(r.spin * 1.6 + (i % 2 ? Math.PI : 0) + (i > 1 ? 0.6 : 0)) * Math.min(0.7, sp * 0.06);
+      leg.rotation.x += (want - leg.rotation.x) * Math.min(1, dt * 10);
+    });
+    for (const w of parts.wings) {
+      const s = w.userData.side;
+      const open = air ? Math.sin(r.flap) * 0.55 + 0.1 : -0.55;
+      w.rotation.z += (s * open - w.rotation.z) * Math.min(1, dt * 12);
+    }
+    const spinRate = air || sp > 0.5 ? 32 : 6;
+    for (const rot of parts.rotors) rot.rotation.y += dt * spinRate;
+    for (const pr of parts.props) pr.rotation[pr.userData.axis] += dt * spinRate * 0.8;
+    // gentle bank into turns and bob while hovering
+    const g = r.model.group;
+    if (air) {
+      g.position.y += Math.sin(t * 2) * 0.06;
+      const turn = (p.facing - (r.lastFacing ?? p.facing));
+      r.bank = (r.bank || 0) + ((-Math.atan2(Math.sin(turn), Math.cos(turn)) / Math.max(dt, 1e-3)) * 0.05 - (r.bank || 0)) * Math.min(1, dt * 4);
+      g.rotation.z = Math.max(-0.35, Math.min(0.35, r.bank));
+      g.rotation.x = -Math.min(0.12, sp * 0.006) + p.vel.y * -0.01;
+    } else { g.rotation.z = 0; g.rotation.x = 0; }
+    r.lastFacing = p.facing;
+    if (r.v.id === 'unicorn' && air && sp > 2) {
+      r.trailT -= dt;
+      if (r.trailT <= 0) { r.trailT = 0.12; game.fx.burst(new THREE.Vector3(p.pos.x - Math.sin(p.facing) * 1.2, p.pos.y + 1.1, p.pos.z - Math.cos(p.facing) * 1.2), 'sparkle', { n: 4 }); }
+    }
+    if (p.vehicle?.autoLand && p.grounded) this.dismount(true);
+  }
+
   balloonUse(up) {
     const st = this.st;
     const g = this.game;
@@ -357,8 +563,9 @@ export class VehicleSystem {
       }
       r.spin += sp * dt * 3;
       for (const w of r.model.wheels) w.rotation.x = r.spin;
-      if (game.mode === 'build' || p.pos.y > 40) this.dismount();
-      if (HM.insideHouse(game.state.house, p.pos.x - ORIGIN.x, p.pos.z - ORIGIN.z)) this.dismount();
+      if (r.v.fly) this.animateFlyer(dt, game, r, sp);
+      if (game.mode === 'build') this.dismount(true);
+      if (this.riding && HM.insideHouse(game.state.house, p.pos.x - ORIGIN.x, p.pos.z - ORIGIN.z) && p.pos.y < 4) this.dismount(true);
     }
     // swimming: little splashes while she moves
     const p = game.player;
@@ -374,6 +581,14 @@ export class VehicleSystem {
       const show = game.mode === 'play';
       const want = show ? 'grid' : 'none';
       if (this.btn.style.display !== want) this.btn.style.display = want;
+      const fly = show && this.flying;
+      const fwant = fly ? 'flex' : 'none';
+      if (this.flyBox.style.display !== fwant) {
+        this.flyBox.style.display = fwant;
+        game.hud.jump.style.display = fly ? 'none' : '';
+        game.hud.emote.style.display = fly ? 'none' : '';
+        if (!fly) { game.input.flyUpHeld = false; game.input.flyDownHeld = false; }
+      }
     }
     const f = this.flight;
     if (f) {

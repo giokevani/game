@@ -8,6 +8,8 @@ export class Input {
     this.zoom = 0;
     this.jumpPressed = false;
     this.actionPressed = false;
+    this.flyUpHeld = false;   // ▲ / ▼ buttons while flying
+    this.flyDownHeld = false;
     this.keys = new Set();
     this.enabled = true;
     this.pointers = new Map();
@@ -48,7 +50,7 @@ export class Input {
       if (e.code === 'KeyE' || e.code === 'Enter') this.actionPressed = true;
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
-    window.addEventListener('blur', () => { this.keys.clear(); this.resetJoy(); });
+    window.addEventListener('blur', () => { this.keys.clear(); this.flyUpHeld = false; this.flyDownHeld = false; this.resetJoy(); });
   }
 
   onTap(fn) { this.tapHandlers.push(fn); }
@@ -133,6 +135,15 @@ export class Input {
     const l = Math.hypot(x, y);
     if (l > 1) { x /= l; y /= l; }
     return { x, y };
+  }
+
+  // -1..1 up/down while flying: ▲ ▼ buttons, or Space / Shift (also R / F) on a keyboard
+  flyAxis() {
+    if (!this.enabled) return 0;
+    const k = this.keys;
+    const up = this.flyUpHeld || k.has('Space') || k.has('KeyR');
+    const down = this.flyDownHeld || k.has('ShiftLeft') || k.has('ShiftRight') || k.has('KeyF');
+    return (up ? 1 : 0) - (down ? 1 : 0);
   }
 
   consumeLook() {
