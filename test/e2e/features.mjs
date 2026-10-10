@@ -47,6 +47,24 @@ try {
     await ev(()=>window.__bb.skyCity.travel('town'));
     console.log('Part 2: Sky Lift, three walkable levels and height-aware zones PASS');
   }
+  if(await ev(()=>!!window.__bb.buildings)){
+    await ev(()=>{const g=window.__bb;g.skyCity.travel('cloud_meadow');g.player.teleport(-20,46,-30);g.openBuild();});
+    await page.locator('[data-prefab="blue_house"]').click();
+    await page.locator('[data-build-confirm]').click();
+    const record=await ev(()=>window.__bb.state.buildings.at(-1));assert.equal(record.floors.length,2);
+    assert.equal(record.y,46);
+    await ev(()=>{const g=window.__bb;g.player.teleport(-20,46,-20);g.openBuild();});
+    await page.locator('[data-floor="1"]').click();
+    assert.equal(await ev(()=>window.__bb.mode),'build');
+    const edit=await ev(()=>{const g=window.__bb,s=g.buildings.entries[0].systems[1],h=s.house;const n=Object.keys(h.tiles).length;s.build.setTool('floor');s.build.erase=false;s.build.stroke={done:new Set()};s.build.paintFloor({x:9,z:21});s.build.endStroke();s.build.exit();return {before:n,after:Object.keys(h.tiles).length,home:Object.keys(g.state.house.tiles).length};});
+    assert.equal(edit.after,edit.before+1);assert.equal(edit.home,12);
+    await ev(()=>{const g=window.__bb,e=g.buildings.entries[0];const it=g.world.interactables.find(it=>it.tag===e.record.id&&it.label==='Go upstairs');it.onUse();});
+    await gameTime(.3);assert.ok(await ev(()=>Math.abs(window.__bb.player.pos.y-49.5)<.2),'stairs stay on upper floor');
+    await page.screenshot({path:'test/out/features-building.png'});
+    const before=await ev(()=>{const g=window.__bb;g.save();return JSON.stringify(g.state.buildings);});
+    await openGame(page,srv.url);assert.equal(await ev(()=>JSON.stringify(window.__bb.state.buildings)),before);
+    console.log('Part 3: free placement on clouds, independent floor editing, stairs and save reload PASS');
+  }
   assert.deepEqual(errors,[]);
   console.log('Part 1: picker, keyboard climb, roof crossing, auto land, all touch rides PASS');
 } finally { await browser.close();srv.stop(); }

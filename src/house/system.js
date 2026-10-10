@@ -60,7 +60,7 @@ export class HouseSystem {
     const c = Math.cos(a), s = Math.sin(a);
     const x = f.x + lx * c + lz * s;
     const z = f.z - lx * s + lz * c;
-    return new THREE.Vector3(ORIGIN.x + x, 0, ORIGIN.z + z);
+    return new THREE.Vector3(this.view.origin.x + x, this.view.origin.y, this.view.origin.z + z);
   }
 
   refreshInteract() {
@@ -71,7 +71,7 @@ export class HouseSystem {
       const item = FURN[f.id];
       if (!item?.use) continue;
       const [label, icon] = USE_LABEL[item.use] || ['Use', '✋'];
-      const base = this.view.baseY(f, item);
+      const base = this.view.origin.y + this.view.baseY(f, item);
       const front = this.worldPosOf(f, 0, item.fp[1] / 2 + 0.35);
       const it = w.addInteract({
         x: front.x, z: front.z, y: base, r: Math.max(1.3, Math.min(2.2, item.fp[0] * 0.8)), label, icon,
@@ -86,7 +86,7 @@ export class HouseSystem {
   use(f, item) {
     const game = this.game;
     const p = game.player;
-    const base = this.view.baseY(f, item);
+    const base = this.view.origin.y + this.view.baseY(f, item);
     const faceAng = f.r * Math.PI / 2;
     const exit = this.worldPosOf(f, 0, item.fp[1] / 2 + 0.5);
     exit.y = base;

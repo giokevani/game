@@ -83,7 +83,7 @@ vec3 bbPattern(vec3 c, float pat, vec3 wp, vec3 n) {
 function makeHouseMaterial(o = {}) {
   const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0, side: o.side ?? THREE.FrontSide, ...o.mat });
   m.onBeforeCompile = (s) => {
-    Object.assign(s.uniforms, houseUniforms);
+    Object.assign(s.uniforms, o.uniforms || houseUniforms);
     s.vertexShader = s.vertexShader
       .replace('#include <common>', `#include <common>
 attribute float aPat; attribute vec2 aWallC; varying float vPat; varying vec2 vWallC; varying vec3 vWPos; varying vec3 vWN;`)
@@ -197,11 +197,18 @@ const tmpQ = new THREE.Quaternion();
 const UPV = new THREE.Vector3(0, 1, 0);
 
 export class HouseView {
-  constructor(scene, world) {
+  constructor(scene, world, options = {}) {
+    this.origin = {...ORIGIN, y:0, ...options.origin};
+    this.tag = options.tag || 'house';
+    this.furnTag = options.tag ? options.tag + ':furn' : 'furn';
+    this.fence = options.fence !== false;
+    this.roofStyle = options.roofStyle || 'hip';
+    this.uniforms = {uFocus:{value:new THREE.Vector3()},uCamPos:{value:new THREE.Vector3()},uCutMode:{value:0},uCutH:{value:1}};
+    this.mats = {wall:makeHouseMaterial({side:THREE.DoubleSide,uniforms:this.uniforms}),floor:makeHouseMaterial({uniforms:this.uniforms}),roof:makeHouseMaterial({side:THREE.DoubleSide,uniforms:this.uniforms}),glass:makeHouseMaterial({uniforms:this.uniforms,mat:{transparent:true,opacity:.42,depthWrite:false}})};
     this.scene = scene;
     this.world = world;
     this.group = new THREE.Group();
-    this.group.position.set(ORIGIN.x, 0, ORIGIN.z);
+    this.group.position.set(this.origin.x, this.origin.y, this.origin.z);
     scene.add(this.group);
     this.struct = new THREE.Group();
     this.furn = new THREE.Group();
@@ -212,16 +219,16 @@ export class HouseView {
     this.house = null;
     this.buildMode = false;
     this.makeGrid();
-    this.platform = world.addPlatform({ test: (x, z) => this.house && HM.insideHouse(this.house, x - ORIGIN.x, z - ORIGIN.z), y: FLOOR_Y });
+    this.platform = world.addPlatform({ test: (x, z) => this.house && HM.insideHouse(this.house, x - this.origin.x, z - this.origin.z), y: this.origin.y + FLOOR_Y, tag: this.tag + ':floor' });
   }
 
-  toLocal(v) { return { x: v.x - ORIGIN.x, z: v.z - ORIGIN.z }; }
-  toWorld(x, z) { return { x: x + ORIGIN.x, z: z + ORIGIN.z }; }
+  toLocal(v) { return { x: v.x - this.origin.x, z: v.z - this.origin.z }; }
+  toWorld(x, z) { return { x: x + this.origin.x, z: z + this.origin.z }; }
 
   makeGrid() {
     const mat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false,
-      uniforms: { uOrigin: { value: new THREE.Vector2(ORIGIN.x, ORIGIN.z) } },
+      uniforms: { uOrigin: { value: new THREE.Vector2(this.origin.x, this.origin.z) } },
       vertexShader: 'uniform vec2 uOrigin; varying vec2 vP; void main(){ vP = (modelMatrix * vec4(position,1.0)).xz - uOrigin; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
       fragmentShader: `varying vec2 vP; void main(){
         vec2 f = fract(vP / 2.0); float t = min(min(f.x, 1.0 - f.x), min(f.y, 1.0 - f.y));
@@ -286,7 +293,7 @@ export class HouseView {
 
   rebuildStructure(h) {
     this.clearGroup(this.struct);
-    this.world.removeTagged('house');
+    this.world.removeTagged(this.tag);
     this.doors = [];
     const floor = new GW(), walls = new GW(), roof = new GW();
     const glass = new GW();
@@ -305,7 +312,7 @@ export class HouseView {
       const horiz = e.t === 'h';
       const cx = horiz ? (e.i + 0.5) * T : e.i * T;
       const cz = horiz ? e.j * T : (e.j + 0.5) * T;
-      const wc = [cx + ORIGIN.x, cz + ORIGIN.z];
+      const wc = [cx + this.origin.x, cz + this.origin.z];
       const side = (tile, dir) => {
         const tt = h.tiles[HM.tkey(tile[0], tile[1])];
         if (!tt) return { color: ex.color, pat: ex.pat };
@@ -356,15 +363,15 @@ export class HouseView {
         const k = px + ',' + pz;
         if (posts.has(k)) continue;
         posts.add(k);
-        walls.box(0.26, WH + 0.02, 0.26, px, FLOOR_Y + WH / 2, pz, e.exterior ? shade(ex.color, 1.04) : TRIM, 0, [px + ORIGIN.x, pz + ORIGIN.z]);
+        walls.box(0.26, WH + 0.02, 0.26, px, FLOOR_Y + WH / 2, pz, e.exterior ? shade(ex.color, 1.04) : TRIM, 0, [px + this.origin.x, pz + this.origin.z]);
       }
       // colliders (skip the doorway)
-      const wx = ORIGIN.x, wz = ORIGIN.z;
+      const wx = this.origin.x, wz = this.origin.z;
       const walk = op && (op.kind === 'door' || op.kind === 'arch');
       const segs = walk ? [[-1, op.kind === 'arch' ? -0.7 : -0.55], [op.kind === 'arch' ? 0.7 : 0.55, 1]] : [[-1, 1]];
       for (const [a, b] of segs) {
-        if (horiz) this.world.addBox(wx + cx + a - 0.02, wz + cz - 0.14, wx + cx + b + 0.02, wz + cz + 0.14, { tag: 'house' });
-        else this.world.addBox(wx + cx - 0.14, wz + cz + a - 0.02, wx + cx + 0.14, wz + cz + b + 0.02, { tag: 'house' });
+        if (horiz) this.world.addBox(wx + cx + a - 0.02, wz + cz - 0.14, wx + cx + b + 0.02, wz + cz + 0.14, { tag: this.tag, bot: this.origin.y, top: this.origin.y + FLOOR_Y + WH });
+        else this.world.addBox(wx + cx - 0.14, wz + cz + a - 0.02, wx + cx + 0.14, wz + cz + b + 0.02, { tag: this.tag, bot: this.origin.y, top: this.origin.y + FLOOR_Y + WH });
       }
       // openings: frames, glass, doors
       if (op) this.buildOpening(op, e, cx, cz, horiz, walls, glass, wc);
@@ -381,19 +388,19 @@ export class HouseView {
 
     this.buildRoof(h, roof);
 
-    const fm = new THREE.Mesh(floor.geo(), HMAT.floor);
+    const fm = new THREE.Mesh(floor.geo(), this.mats.floor);
     fm.receiveShadow = true; fm.castShadow = false;
-    const wm = new THREE.Mesh(walls.geo(), HMAT.wall);
+    const wm = new THREE.Mesh(walls.geo(), this.mats.wall);
     wm.receiveShadow = true; wm.castShadow = true;
     this.struct.add(fm, wm);
-    if (glass.pos.length) { const gm = new THREE.Mesh(glass.geo(), HMAT.glass); gm.renderOrder = 3; this.struct.add(gm); }
-    if (roof.pos.length) {
-      this.roofMesh = new THREE.Mesh(roof.geo(), HMAT.roof);
+    if (glass.pos.length) { const gm = new THREE.Mesh(glass.geo(), this.mats.glass); gm.renderOrder = 3; this.struct.add(gm); }
+    if (roof.pos.length && this.roofStyle === 'hip') {
+      this.roofMesh = new THREE.Mesh(roof.geo(), this.mats.roof);
       this.roofMesh.castShadow = true;
       this.roofMesh.receiveShadow = true;
       this.struct.add(this.roofMesh);
     } else this.roofMesh = null;
-    this.buildPlotFence(h);
+    if(this.fence) this.buildPlotFence(h);
   }
 
   buildOpening(op, e, cx, cz, horiz, walls, glass, wc) {
@@ -435,12 +442,12 @@ export class HouseView {
         for (let k = 0; k < n; k++) { wca[k * 2] = wc[0]; wca[k * 2 + 1] = wc[1]; }
         g.setAttribute('aWallC', new THREE.Float32BufferAttribute(wca, 2));
         const pivot = new THREE.Group();
-        const m = new THREE.Mesh(g, HMAT.wall);
+        const m = new THREE.Mesh(g, this.mats.wall);
         m.castShadow = true;
         pivot.add(m);
         if (horiz) pivot.position.set(cx - 0.54, FLOOR_Y, cz);
         else { pivot.position.set(cx, FLOOR_Y, cz + 0.54); pivot.rotation.y = Math.PI / 2; }
-        pivot.userData = { base: pivot.rotation.y, open: 0, wx: cx + ORIGIN.x, wz: cz + ORIGIN.z };
+        pivot.userData = { base: pivot.rotation.y, open: 0, wx: cx + this.origin.x, wz: cz + this.origin.z };
         this.struct.add(pivot);
         this.doors.push(pivot);
       }
@@ -521,17 +528,17 @@ export class HouseView {
     const m = new THREE.Mesh(b.build({ ao: 0.2, aoHeight: 0.6 }), M.std);
     m.castShadow = true; m.receiveShadow = true;
     this.struct.add(m);
-    const wx = ORIGIN.x, wz = ORIGIN.z;
-    this.world.addBox(wx + x0 - 0.1, wz + z0 - 0.1, wx + x1 + 0.1, wz + z0 + 0.1, { tag: 'house' });
-    this.world.addBox(wx + x0 - 0.1, wz + z0, wx + x0 + 0.1, wz + z1, { tag: 'house' });
-    this.world.addBox(wx + x1 - 0.1, wz + z0, wx + x1 + 0.1, wz + z1, { tag: 'house' });
-    this.world.addBox(wx + x0, wz + z1 - 0.1, wx + gateL, wz + z1 + 0.1, { tag: 'house' });
-    this.world.addBox(wx + gateR, wz + z1 - 0.1, wx + x1, wz + z1 + 0.1, { tag: 'house' });
+    const wx = this.origin.x, wz = this.origin.z;
+    this.world.addBox(wx + x0 - 0.1, wz + z0 - 0.1, wx + x1 + 0.1, wz + z0 + 0.1, { tag: this.tag, bot: this.origin.y, top: this.origin.y + FLOOR_Y + WH });
+    this.world.addBox(wx + x0 - 0.1, wz + z0, wx + x0 + 0.1, wz + z1, { tag: this.tag, bot: this.origin.y, top: this.origin.y + FLOOR_Y + WH });
+    this.world.addBox(wx + x1 - 0.1, wz + z0, wx + x1 + 0.1, wz + z1, { tag: this.tag, bot: this.origin.y, top: this.origin.y + FLOOR_Y + WH });
+    this.world.addBox(wx + x0, wz + z1 - 0.1, wx + gateL, wz + z1 + 0.1, { tag: this.tag, bot: this.origin.y, top: this.origin.y + FLOOR_Y + WH });
+    this.world.addBox(wx + gateR, wz + z1 - 0.1, wx + x1, wz + z1 + 0.1, { tag: this.tag, bot: this.origin.y, top: this.origin.y + FLOOR_Y + WH });
   }
 
   rebuildFurniture(h, excludeUid = null) {
     this.clearGroup(this.furn);
-    this.world.removeTagged('furn');
+    this.world.removeTagged(this.furnTag);
     const buckets = {};
     for (const f of h.furniture) {
       if (f.uid === excludeUid) continue;
@@ -550,7 +557,7 @@ export class HouseView {
       if (item.place === 'floor' && item.h > 0.35 && !(f.y > 0.01) && item.fp[0] * item.fp[1] > 0.2 && !['bounce'].includes(item.use)) {
         const bx = HM.itemBox(item, f.x, f.z, f.r);
         const pad = 0.08;
-        this.world.addBox(ORIGIN.x + bx.x0 + pad, ORIGIN.z + bx.z0 + pad, ORIGIN.x + bx.x1 - pad, ORIGIN.z + bx.z1 - pad, { tag: 'furn', top: base + Math.min(item.h, 0.6) });
+        this.world.addBox(this.origin.x + bx.x0 + pad, this.origin.z + bx.z0 + pad, this.origin.x + bx.x1 - pad, this.origin.z + bx.z1 - pad, { tag: this.furnTag, bot:this.origin.y, top: this.origin.y + base + Math.min(item.h, 0.6) });
       }
     }
     for (const [k, list] of Object.entries(buckets)) {
@@ -573,17 +580,17 @@ export class HouseView {
   update(dt, playerPos, camera, mode) {
     // doors swing open when someone is close
     for (const d of this.doors) {
-      const near = mode === 'play' && Math.hypot(playerPos.x - d.userData.wx, playerPos.z - d.userData.wz) < 2.2;
+      const near = Math.abs(playerPos.y-this.origin.y)<2 && mode === 'play' && Math.hypot(playerPos.x - d.userData.wx, playerPos.z - d.userData.wz) < 2.2;
       d.userData.open += ((near ? 1 : 0) - d.userData.open) * Math.min(1, dt * 6);
       d.rotation.y = d.userData.base - d.userData.open * 1.45;
     }
-    const inside = this.house && HM.insideHouse(this.house, playerPos.x - ORIGIN.x, playerPos.z - ORIGIN.z) && playerPos.y < FLOOR_Y + 2.5;
+    const inside = this.house && HM.insideHouse(this.house, playerPos.x - this.origin.x, playerPos.z - this.origin.z) && playerPos.y >= this.origin.y && playerPos.y < this.origin.y + FLOOR_Y + 2.5;
     this.playerInside = inside;
-    houseUniforms.uFocus.value.copy(playerPos);
-    houseUniforms.uCamPos.value.copy(camera.position);
-    if (mode === 'build') { houseUniforms.uCutMode.value = 2; houseUniforms.uCutH.value = FLOOR_Y + 0.9; }
-    else if (inside) { houseUniforms.uCutMode.value = 1; houseUniforms.uCutH.value = FLOOR_Y + 0.95; }
-    else houseUniforms.uCutMode.value = 0;
+    this.uniforms.uFocus.value.copy(playerPos);
+    this.uniforms.uCamPos.value.copy(camera.position);
+    if (mode === 'build') { this.uniforms.uCutMode.value = 2; this.uniforms.uCutH.value = this.origin.y + FLOOR_Y + 0.9; }
+    else if (inside) { this.uniforms.uCutMode.value = 1; this.uniforms.uCutH.value = this.origin.y + FLOOR_Y + 0.95; }
+    else this.uniforms.uCutMode.value = 0;
     if (this.roofMesh) this.roofMesh.visible = !(mode === 'build' || inside);
   }
 }

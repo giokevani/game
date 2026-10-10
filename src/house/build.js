@@ -84,14 +84,15 @@ export class BuildMode {
     if (this.active) return;
     const g = this.game;
     if (g.mode !== 'play') return;
+    this.plane.constant = -(this.sys.view.origin.y + FLOOR_Y);
     this.active = true;
     g.mode = 'build';
     g.input.buildMode = true;
     g.hud.setVisible(false);
     g.player.stand();
     const r = HM.plotRange(this.house.size);
-    const cx = ORIGIN.x + (r.i0 + r.i1) * T / 2, cz = ORIGIN.z + (r.j0 + r.j1) * T / 2;
-    this.cam.target.set(cx, 0, cz + 2);
+    const cx = this.sys.view.origin.x + (r.i0 + r.i1) * T / 2, cz = this.sys.view.origin.z + (r.j0 + r.j1) * T / 2;
+    this.cam.target.set(cx, this.sys.view.origin.y, cz + 2);
     this.cam.dist = this.house.size * 1.7 + 6;
     this.cam.yaw = 0; this.cam.tYaw = 0;
     this.sys.view.setGrid(true, this.house.size);
@@ -349,7 +350,7 @@ export class BuildMode {
     this.ray.setFromCamera(ndc, this.game.camera);
     const p = new THREE.Vector3();
     if (!this.ray.ray.intersectPlane(this.plane, p)) return null;
-    return { x: p.x - ORIGIN.x, z: p.z - ORIGIN.z };
+    return { x: p.x - this.sys.view.origin.x, z: p.z - this.sys.view.origin.z };
   }
 
   isUI(e) { return e.target !== this.game.renderer.domElement; }
@@ -444,8 +445,8 @@ export class BuildMode {
     c.target.x += (-dx * rx + dy * fx) * s;
     c.target.z += (-dx * rz + dy * fz) * s;
     const r = HM.plotRange(this.house.size);
-    c.target.x = Math.max(ORIGIN.x + r.i0 * T - 4, Math.min(ORIGIN.x + r.i1 * T + 4, c.target.x));
-    c.target.z = Math.max(ORIGIN.z + r.j0 * T - 4, Math.min(ORIGIN.z + r.j1 * T + 6, c.target.z));
+    c.target.x = Math.max(this.sys.view.origin.x + r.i0 * T - 4, Math.min(this.sys.view.origin.x + r.i1 * T + 4, c.target.x));
+    c.target.z = Math.max(this.sys.view.origin.z + r.j0 * T - 4, Math.min(this.sys.view.origin.z + r.j1 * T + 6, c.target.z));
   }
 
   hoverAt(loc) {
@@ -647,7 +648,7 @@ export class BuildMode {
       const it = FURN[f.id];
       if (!it) continue;
       if (it.place === 'wall') {
-        const c = new THREE.Vector3(ORIGIN.x + f.x, FLOOR_Y + (f.y ?? it.y) + it.h / 2, ORIGIN.z + f.z);
+        const c = new THREE.Vector3(this.sys.view.origin.x + f.x, this.sys.view.origin.y + FLOOR_Y + (f.y ?? it.y) + it.h / 2, this.sys.view.origin.z + f.z);
         const d = ray.distanceToPoint(c);
         if (d < 0.6 && d < bd) { bd = d; best = f; }
       }
@@ -765,7 +766,7 @@ export class BuildMode {
       this.game.emit('placed', gh.id, gh.item);
     }
     this.game.audio?.play('place');
-    this.game.fx?.burst(new THREE.Vector3(ORIGIN.x + gh.x, FLOOR_Y + 0.3, ORIGIN.z + gh.z), 'sparkle');
+    this.game.fx?.burst(new THREE.Vector3(this.sys.view.origin.x + gh.x, this.sys.view.origin.y + FLOOR_Y + 0.3, this.sys.view.origin.z + gh.z), 'sparkle');
     this.clearGhost();
     this.packInvalid();
     this.sys.rebuild({ structure: false });
