@@ -1,0 +1,9 @@
+{
+  "conclusion": "success",
+  "headSha": "3296ac1933f4d4a197a4671c95556a4fc1f2653c",
+  "url": "https://github.com/giokevani/game/actions/runs/38053682225",
+  "checked_at": "2026-10-10T12:56:51.042532+00:00",
+  "live_url": "https://giokevani.github.io/game/",
+  "live_checks": "all six stories, 18 discoveries, three postcards, constellation, persistence, original tasks; no console errors",
+  "asset_match": true
+}

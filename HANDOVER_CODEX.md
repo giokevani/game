@@ -2,13 +2,15 @@
 
 Status: 10 October 2026. Development continued in this Codex session after the companion task failed before starting.
 
-## Exploration upgrade
+## Exploration upgrade — published
 
 Gio selected a richer world with beautiful places, secrets, characters and adventures. The new Journal contains six character stories, eighteen discoveries, a clue compass that follows the camera, three cloud postcards and a six-friend constellation at Star Castle. Progress is saved and rewards are paid once. Town tasks remain accessible from the Journal.
 
 Every magic world now has a furnished meeting place, an animated keeper and companion, a lit beacon after completion, clearer paths and themed landmarks. Space has a rocket and observatory with a ringed planet; Heaven has a rainbow and cloud garden; Hell has a dragon bakery and volcano; Candy Land has a gingerbread cottage and biscuit bridge; Underwater has a shipwreck and coral garden; Ice has a snow hut, waterfall and aurora ribbons. Story locations and static landmarks are protected from building placement. Return doors sit beside the arrival path so they do not obscure the camera. The old town tracker is hidden while exploring other worlds.
 
 Verification: 53 unit tests, all six adventure stories, 18 finds, three postcards, completion/reload persistence, 24 town checks and all five original feature groups passed. Logs are permanent in `validation/2026-10-10-adventures/`. Player-copy scan: 0 BLOCK, 0 HIGH, 1 MED (short sentences reviewed for young readers).
+
+Published commit `3296ac1`; build and deploy succeeded in https://github.com/giokevani/game/actions/runs/38053682225. The complete adventure suite also passed on the live URL, including save reload and original Town tasks, with no console errors. Live evidence and previews are in `validation/2026-10-10-adventures/`.
 
 Run `npm run test:e2e:adventures` for the new end-to-end coverage. The test helper continues to mute speech in all browser contexts. This is Chromium touch emulation; physical iPhone Safari remains unverified.
 
