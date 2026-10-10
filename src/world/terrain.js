@@ -16,7 +16,7 @@ export function terrainHeight(x, z) {
   const ex = Math.max(0, Math.abs(x) - 132) * beachFade;
   const ez = Math.max(0, -z - 112);
   const e = Math.max(ex, ez);
-  if (e > 0) h += e * e * 0.011 + e * 0.1 * (1.2 + noise2(x * 1.7, z * 1.7));
+  if (e > 0) h += (1 - Math.exp(-e / 35)) * (3.5 + noise2(x * .25, z * .25) * 2);
   // gentle bumps in the park
   if (x > 60 && x < 135 && z > -100 && z < 10) h += Math.max(0, noise2(x * 0.6, z * 0.6)) * 0.5;
   // beach slope into the sea
@@ -38,10 +38,10 @@ const WET = new THREE.Color('#e6c98e');
 const HILL = new THREE.Color('#6fb257');
 
 export function buildGround(scene) {
-  const W = 360, D = 320, SX = 144, SZ = 128;
+  const W = 320, D = 320, SX = 128, SZ = 128;
   const geo = new THREE.PlaneGeometry(W, D, SX, SZ);
   geo.rotateX(-Math.PI / 2);
-  geo.translate(0, 0, -5);
+  geo.translate(0, 0, 0);
   const pos = geo.attributes.position;
   const col = new Float32Array(pos.count * 3);
   const c = new THREE.Color();
@@ -74,6 +74,7 @@ export function buildGround(scene) {
   far.position.set(0, -2.5, -80);
   far.scale.set(1, 0.7, 1);
   scene.add(far);
+  ground.userData.far = far;
   return ground;
 }
 

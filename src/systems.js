@@ -1,4 +1,5 @@
 // Registers all gameplay systems in order.
+import { EndlessWorld } from './world/endless.js';
 import { BuildingSystem } from './house/buildings.js';
 import { SkyCity } from './world/skycity.js';
 import { HouseSystem } from './house/system.js';
@@ -23,6 +24,7 @@ export function registerSystems(game) {
   game.addSystem(new VehicleSystem());
   game.addSystem(new SkyCity());
   game.addSystem(new BuildingSystem());
+  game.addSystem(new EndlessWorld());
   game.addSystem(new QuestSystem());
   game.addSystem(new Weather());
   game.addSystem(new CafeSystem());

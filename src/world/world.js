@@ -10,7 +10,9 @@ import { buildNature } from './nature.js';
 const CELL = 8;
 
 export class World {
-  constructor(scene, quality) {
+  constructor(scene, quality, options = {}) {
+    this.height = options.height || terrainHeight;
+    this.waterY = options.waterY ?? WATER_Y;
     this.scene = scene;
     this.quality = quality;
     this.boxes = [];
@@ -41,6 +43,8 @@ export class World {
   }
   removeCollider(c) {
     c.off = true;
+    for(const [key,list] of this.grid){const i=list.indexOf(c);if(i>=0)list.splice(i,1);if(!list.length)this.grid.delete(key);}
+    this.boxes=this.boxes.filter(b=>b!==c);this.circles=this.circles.filter(b=>b!==c);
   }
   removeTagged(tag) {
     for (const list of this.grid.values()) {
@@ -105,7 +109,7 @@ export class World {
 
   // ground height under x,z for something whose feet are at currentY
   groundAt(x, z, currentY = 0, step = 0.75) {
-    let h = terrainHeight(x, z);
+    let h = this.height(x, z);
     for (const p of this.platforms) {
       if (p.off) continue;
       let inside;
@@ -118,7 +122,7 @@ export class World {
   }
 
   inWater(x, z) {
-    return terrainHeight(x, z) < WATER_Y - 0.25 && this.groundAt(x, z, 5) < WATER_Y;
+    return this.height(x, z) < this.waterY - 0.25 && this.groundAt(x, z, 5) < this.waterY;
   }
 
   // ---------- interactables ----------
