@@ -1,9 +1,11 @@
 {
-  "checked_at": "2026-10-10T12:33:56.223517+00:00",
+  "checked_at": "2026-10-10T12:38:50.506683+00:00",
   "branch": "claude/nice-fermi-a6eund",
-  "release_commit": "e4874c2",
-  "push": "failed",
-  "reason": "HTTPS: could not read Username; SSH: Permission denied (publickey)",
-  "live_verification": "not performed: release was not pushed",
-  "next_action": "Authenticate GitHub on this Mac, then normal push to the approved branch and verify Pages deployment."
+  "deployed_commit": "bce3fdfb57a14850f55d9284f4f06117f416769f",
+  "push": "success",
+  "workflow": "https://github.com/giokevani/game/actions/runs/38052614539",
+  "workflow_conclusion": "success",
+  "live_url": "https://giokevani.github.io/game/",
+  "live_verification": "PASS: released systems present; Star Castle at 150m; Space gravity 8; return home; no console errors; speech muted",
+  "previous_push_failure": "HTTPS: could not read Username; SSH: Permission denied (publickey)"
 }

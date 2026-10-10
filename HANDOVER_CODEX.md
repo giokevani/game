@@ -17,8 +17,8 @@ Status: 10 October 2026. Development continued in this Codex session after the c
 - Endless view: 44 draw calls and 90,084 triangles in the recorded test (budget 260 / 1,100,000).
 - Café regression suite: 21/21 passed, including all 17 recipes. Town regression suite: 24/24 passed. Results are recorded in `validation/2026-10-10/town-results.json`.
 - Audio and system speech are muted in every browser context created by the test helper. The normal game sound settings are unchanged.
-- Deployment is pending: the normal push failed because HTTPS credentials are unavailable; SSH also rejected authentication. The release commit is `e4874c2`. The failure and next action are recorded in `validation/2026-10-10/deployment.json`.
-- Next: authenticate GitHub on this Mac, run `git push origin claude/nice-fermi-a6eund`, then verify the matching Actions run and live page.
+- Deployment succeeded for commit `bce3fdf` after GitHub CLI authentication. Build and deploy: https://github.com/giokevani/game/actions/runs/38052614539.
+- Live checks passed at https://giokevani.github.io/game/: released systems, Star Castle travel, Space gravity, return home and no console errors. Evidence: `validation/2026-10-10/deployment.json` and `live.txt`.
 - Physical iPhone Safari testing remains open; Chromium uses an iPhone 11 Pro touch viewport.
 
 ## Useful commands
