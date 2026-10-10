@@ -1,4 +1,5 @@
 // Registers all gameplay systems in order.
+import { SkyCity } from './world/skycity.js';
 import { HouseSystem } from './house/system.js';
 import { PetSystem } from './pets/system.js';
 import { JobSystem } from './jobs/system.js';
@@ -19,6 +20,7 @@ export function registerSystems(game) {
   game.addSystem(new NPCSystem());
   game.addSystem(new Shells());
   game.addSystem(new VehicleSystem());
+  game.addSystem(new SkyCity());
   game.addSystem(new QuestSystem());
   game.addSystem(new Weather());
   game.addSystem(new CafeSystem());

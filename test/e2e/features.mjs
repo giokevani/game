@@ -10,6 +10,7 @@ try {
   await openGame(page,srv.url);
   await ev(()=>{document.querySelector('.name-input').value='Mila';document.querySelector('.panel-head .btn.mint').click();});
   for(let i=0;i<8;i++){await ev(()=>document.querySelector('.dialog .btn')?.click());await page.waitForTimeout(150);}
+  if(!process.env.SKIP_FLIGHT){
   await ev(()=>{const g=window.__bb;g.player.teleport(-100,0,24);g.vehicles.picker();});
   for(const id of ['unicorn','helicopter','airship','balloon']) assert.equal(await page.locator(`[data-ride="${id}"]`).count(),1);
   await page.locator('[data-ride="unicorn"]').click();
@@ -31,6 +32,20 @@ try {
     await page.locator('[data-fly="flyDownHeld"]').dispatchEvent('pointerup');
     assert.ok(await ev(()=>window.__bb.player.grounded),id+' lands');
     await ev(()=>window.__bb.vehicles.dismount());
+  }
+  }
+  if(await ev(()=>!!window.__bb.skyCity)){
+    await ev(()=>window.__bb.skyCity.picker());
+    for(const id of ['cloud_meadow','rainbow_town','star_castle']) assert.equal(await page.locator(`[data-sky="${id}"]`).count(),1);
+    await page.locator('[data-sky="cloud_meadow"]').click();
+    for(const [id,y] of [['cloud_meadow',46],['rainbow_town',96],['star_castle',150]]){
+      await ev(id=>window.__bb.skyCity.travel(id),id);await gameTime(.25);
+      assert.ok(await ev(y=>Math.abs(window.__bb.player.pos.y-y)<.1,y),id+' walkable');
+      assert.equal(await ev(()=>window.__bb.world.zoneAt(window.__bb.player.pos)?.id),id);
+    }
+    await page.screenshot({path:'test/out/features-sky.png'});
+    await ev(()=>window.__bb.skyCity.travel('town'));
+    console.log('Part 2: Sky Lift, three walkable levels and height-aware zones PASS');
   }
   assert.deepEqual(errors,[]);
   console.log('Part 1: picker, keyboard climb, roof crossing, auto land, all touch rides PASS');

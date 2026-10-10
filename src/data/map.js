@@ -66,8 +66,16 @@ export const BALLOON = { x: 118, z: -76 };
 export const CAVE_GATE = { x: -106, z: 46, r: 5 };
 export const SKY_ISLAND = { x: 0, y: 82, z: -112, r: 24 };
 
+export const SKY_LIFT = { x: -14, z: 15 };
+export const SKY_LEVELS = [
+  {id:'cloud_meadow',name:'Cloud Meadow',x:-20,z:-30,y:46,r:28,icon:'☁️'},
+  {id:'rainbow_town',name:'Rainbow Town',x:50,z:-30,y:96,r:30,icon:'🌈'},
+  {id:'star_castle',name:'Star Castle',x:-10,z:-60,y:150,r:30,icon:'⭐'},
+];
+
 // Zones for discovery + pet "wants to go to" needs
 export const ZONES = [
+  ...SKY_LEVELS.map(l => ({...l, minY:l.y-2, maxY:l.y+12})),
   { id: 'home', name: 'Home Street', x: -40, z: -64, r: 40, icon: '🏡' },
   { id: 'square', name: 'Town Square', x: 0, z: -10, r: 30, icon: '⛲' },
   { id: 'park', name: 'Blossom Park', x: 92, z: -40, r: 42, icon: '🌳' },
@@ -82,6 +90,7 @@ function inRect(x, z, r, pad = 0) {
 
 // Is a point covered by something (for scattering trees/grass)?
 export function isBlocked(x, z, pad = 0) {
+  if (Math.hypot(x-SKY_LIFT.x,z-SKY_LIFT.z)<4+pad) return true;
   for (const r of ROADS) if (inRect(x, z, r.rect, pad + 1)) return true;
   for (const p of PATHS) if (inRect(x, z, p.rect, pad)) return true;
   if (Math.hypot(x - PLAZA.x, z - PLAZA.z) < PLAZA.r + pad + 1) return true;
@@ -104,11 +113,12 @@ export function isBlocked(x, z, pad = 0) {
 
 export function zoneAt(x, z, y = 0) {
   for (const zn of ZONES) {
+    if (zn.minY !== undefined) { if(y >= zn.minY && y <= zn.maxY && Math.hypot(x-zn.x,z-zn.z)<zn.r) return zn; continue; }
     if (zn.id === 'sky') {
       if (y > 40 && Math.hypot(x - zn.x, z - zn.z) < zn.r + 10) return zn;
       continue;
     }
-    if (Math.hypot(x - zn.x, z - zn.z) < zn.r) return zn;
+    if (y < 30 && Math.hypot(x - zn.x, z - zn.z) < zn.r) return zn;
   }
   return null;
 }

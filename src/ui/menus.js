@@ -1,11 +1,12 @@
 // Map with fast travel, and the settings menu (sound, graphics, backup).
 import * as THREE from 'three';
 import { h, modal, toast, click, confirmBox, promptBox } from './ui.js';
-import { WORLD, ROADS, PATHS, PLAZA, BUILDINGS, POND, PIER, ZONES, HOME_PLOT, shoreZ, BALLOON, GARDEN, PLAYGROUND, SKY_ISLAND } from '../data/map.js';
+import { WORLD, ROADS, PATHS, PLAZA, BUILDINGS, POND, PIER, ZONES, HOME_PLOT, shoreZ, BALLOON, GARDEN, PLAYGROUND, SKY_ISLAND, SKY_LEVELS } from '../data/map.js';
 import { exportCode, importCode, wipeGame, saveGame } from '../core/save.js';
 import { levelFromXP } from '../core/state.js';
 
 const TRAVEL = {
+  ...Object.fromEntries(SKY_LEVELS.map(l=>[l.id,[l.x,l.z+l.r-8,l.y]])),
   home: [HOME_PLOT.cx, HOME_PLOT.front + 4],
   square: [0, 6],
   park: [80, -22],
@@ -60,14 +61,15 @@ export function setupMenus(game) {
     for (const n of game.npcs?.list || []) if (n.marker) { x.font = '20px sans-serif'; icon('❗', n.pos.x, n.pos.z - 4); }
     // pet + player
     const p = game.player.pos;
+    if(p.x<WORLD.minX||p.x>WORLD.maxX||p.z<WORLD.minZ||p.z>WORLD.maxZ){x.font='600 18px Fredoka';x.fillStyle='#5a4a6a';x.fillText('Far away — use the map to come home',W/2,40);}
     x.fillStyle = '#ff5d9e'; x.strokeStyle = '#ffffff'; x.lineWidth = 3;
     x.beginPath(); x.arc(sx(p.x), sz(p.z), 9, 0, 7); x.fill(); x.stroke();
     x.beginPath(); const f = game.player.facing;
     x.moveTo(sx(p.x) + Math.sin(f) * 16, sz(p.z) + Math.cos(f) * 16); x.lineTo(sx(p.x) + Math.sin(f + 2.5) * 8, sz(p.z) + Math.cos(f + 2.5) * 8); x.lineTo(sx(p.x) + Math.sin(f - 2.5) * 8, sz(p.z) + Math.cos(f - 2.5) * 8); x.fill();
-    if (p.y > 40) { x.font = '600 18px Fredoka, sans-serif'; x.fillStyle = '#5a4a6a'; x.fillText('☁️ You are on Sky Island', W / 2, 20); }
+    if (p.y > 40) { x.font = '600 18px Fredoka, sans-serif'; x.fillStyle = '#5a4a6a'; x.fillText(game.world.zoneAt(p)?.name || 'Flying in the sky', W / 2, 20); }
     const buttons = h('div', { class: 'row', style: { marginTop: '10px' } });
     for (const z of ZONES) {
-      const found = st.collections.zones.includes(z.id);
+      const found = z.minY !== undefined || st.collections.zones.includes(z.id);
       buttons.appendChild(h('button', { class: 'btn small ' + (found ? 'sky' : 'ghost disabled'), onclick: () => {
         click();
         if (!found) return;

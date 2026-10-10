@@ -21,7 +21,7 @@ test('40 shells, none inside a building', () => {
 });
 
 test('zones are where the map says', () => {
-  for (const zn of ZONES.filter((z) => z.id !== 'sky')) assert.equal(zoneAt(zn.x, zn.z, 0)?.id, zn.id);
+  for (const zn of ZONES.filter((z) => z.id !== 'sky' && z.minY === undefined)) assert.equal(zoneAt(zn.x, zn.z, 0)?.id, zn.id);
   assert.equal(zoneAt(0, -104, 80)?.id, 'sky');
 });
 
