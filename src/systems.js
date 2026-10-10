@@ -1,4 +1,5 @@
 // Registers all gameplay systems in order.
+import { MagicDoors } from './world/realms.js';
 import { EndlessWorld } from './world/endless.js';
 import { BuildingSystem } from './house/buildings.js';
 import { SkyCity } from './world/skycity.js';
@@ -16,16 +17,17 @@ import { setupMenus } from './ui/menus.js';
 
 export function registerSystems(game) {
   game.addSystem({ init: (g) => { setupAvatarUI(g); setupMenus(g); } });
-  game.addSystem(new HouseSystem());
+  game.addSystem(Object.assign(new HouseSystem(),{homeOnly:true}));
   game.addSystem(new PetSystem());
-  game.addSystem(new JobSystem());
-  game.addSystem(new NPCSystem());
-  game.addSystem(new Shells());
+  game.addSystem(Object.assign(new JobSystem(),{homeOnly:true}));
+  game.addSystem(Object.assign(new NPCSystem(),{homeOnly:true}));
+  game.addSystem(Object.assign(new Shells(),{homeOnly:true}));
   game.addSystem(new VehicleSystem());
-  game.addSystem(new SkyCity());
+  game.addSystem(Object.assign(new SkyCity(),{homeOnly:true}));
   game.addSystem(new BuildingSystem());
   game.addSystem(new EndlessWorld());
-  game.addSystem(new QuestSystem());
-  game.addSystem(new Weather());
-  game.addSystem(new CafeSystem());
+  game.addSystem(new MagicDoors());
+  game.addSystem(Object.assign(new QuestSystem(),{homeOnly:true}));
+  game.addSystem(Object.assign(new Weather(),{homeOnly:true}));
+  game.addSystem(Object.assign(new CafeSystem(),{homeOnly:true}));
 }

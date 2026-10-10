@@ -57,7 +57,7 @@ export class Game {
     this.player = new Player(this.world, this.avatar);
     this.player.onJump = () => this.audio?.play('jump');
     const spawn = state.player.pos;
-    if (spawn) this.player.teleport(spawn[0], undefined, spawn[2], spawn[3]);
+    if (spawn) this.player.teleport(spawn[0], spawn[1], spawn[2], spawn[3]);
     else this.player.teleport(HOME_PLOT.cx, undefined, HOME_PLOT.front + 5, Math.PI);
     this.rig = new CameraRig(camera, this.world);
     this.rig.yaw = this.player.facing + Math.PI;
@@ -107,7 +107,7 @@ export class Game {
     this.input.enabled = !busy;
     this.player.frozen = busy;
     if (this.mode === 'play') this.player.update(dt, this.input, this.rig.yaw);
-    for (const s of this.systems) s.update?.(dt, this);
+    for (const s of this.systems) if(!s.homeOnly || !this.realm || this.realm==='home') s.update?.(dt, this);
     if (this.mode === 'play') this.rig.update(dt, this.input, this.player.pos, this.cameraOpts?.() || {});
     else if (this.mode === 'cutscene') this.rig.update(dt, this.input, this.player.pos);
     this.sky.update(dt, this.player.pos);
@@ -160,7 +160,8 @@ export class Game {
   save() {
     if (this.noSave) return false;
     const p = this.player.pos;
-    this.state.player.pos = [p.x, p.y, p.z, this.player.facing];
+    const home = this.realm && this.realm !== 'home' ? this.magicDoors.returnSpot : null;
+    this.state.player.pos = home ? [home.x,0,home.z+4,this.player.facing] : [p.x,p.y,p.z,this.player.facing];
     return saveGame(this.state);
   }
 

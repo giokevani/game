@@ -353,7 +353,7 @@ export class PetSystem {
       } else this.zoneT = 0;
     } else game.hud.setNeeds([]);
     // pets at home wander about
-    for (const a of this.homeActors) {
+    for (const a of (!game.realm || game.realm==='home' ? this.homeActors : [])) {
       if (!a.wander || Math.random() < dt * 0.15) {
         const tiles = Object.keys(st.house.tiles);
         const [i, j] = tiles[Math.floor(Math.random() * tiles.length)].split(',').map(Number);

@@ -65,6 +65,30 @@ try {
     await openGame(page,srv.url);assert.equal(await ev(()=>JSON.stringify(window.__bb.state.buildings)),before);
     console.log('Part 3: free placement on clouds, independent floor editing, stairs and save reload PASS');
   }
+  if(await ev(()=>!!window.__bb.endless)){
+    await ev(()=>{const g=window.__bb;g.player.teleport(420,undefined,-400);g.rig.yaw=-Math.PI/2;});
+    await page.keyboard.down('KeyW');await gameTime(.8);await page.keyboard.up('KeyW');
+    assert.ok(await ev(()=>window.__bb.player.pos.x>423),'walk beyond former edge');
+    await ev(()=>{const g=window.__bb;for(let i=0;i<30;i++)g.endless.update();});
+    const budget=await ev(()=>{const g=window.__bb;g.renderer.render(g.scene,g.camera);return {chunks:g.endless.chunks.size,calls:g.renderer.info.render.calls,triangles:g.renderer.info.render.triangles};});
+    assert.ok(budget.chunks<=25);assert.ok(budget.calls<260);assert.ok(budget.triangles<1100000);
+    await page.screenshot({path:'test/out/features-endless.png'});
+    console.log('Part 4: walking beyond bounds, chunk streaming and performance PASS',budget);
+  }
+  if(await ev(()=>!!window.__bb.magicDoors)){
+    await ev(()=>{const g=window.__bb;g.player.teleport(58,0,44);g.vehicles.ride('unicorn');});
+    for(const id of ['space','heaven','hell','candy','underwater','ice']){
+      await ev(id=>window.__bb.magicDoors.travel(id),id);await gameTime(.2);
+      const r=await ev(()=>{const g=window.__bb;g.renderer.render(g.scene,g.camera);return {realm:g.realm,back:g.world.interactables.some(i=>i.label==='Back to Blossom Bay'),avatar:g.avatar.root.parent===g.scene,ride:g.vehicles.riding.model.group.parent===g.scene,gravity:g.player.gravity,save:g.state.player.pos,calls:g.renderer.info.render.calls,triangles:g.renderer.info.render.triangles};});
+      assert.equal(r.realm,id);assert.ok(r.back&&r.avatar&&r.ride);assert.equal(r.save[2],44);if(id==='space')assert.equal(r.gravity,8);assert.ok(r.calls<260&&r.triangles<1100000);
+      if(id==='hell'){await ev(()=>{const g=window.__bb;g.player.teleport(20,0,-15);g.magicDoors.update(.05,g);});assert.ok(await ev(()=>window.__bb.player.pos.z>-7),'lava bounces away');}
+      await page.screenshot({path:`test/out/features-realm-${id}.png`});
+      await ev(()=>{const g=window.__bb;g.world.interactables.find(i=>i.label==='Back to Blossom Bay').onUse();});
+      assert.equal(await ev(()=>window.__bb.realm),'home');
+    }
+    await ev(()=>window.__bb.vehicles.dismount());
+    console.log('Part 5: six worlds, return doors, carried avatar and ride, save safety, lava and performance PASS');
+  }
   assert.deepEqual(errors,[]);
   console.log('Part 1: picker, keyboard climb, roof crossing, auto land, all touch rides PASS');
 } finally { await browser.close();srv.stop(); }

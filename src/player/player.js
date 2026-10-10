@@ -15,6 +15,7 @@ export class Player {
     this.radius = 0.42;
     this.grounded = true;
     this.speed = 7.2;
+    this.gravity = 30;
     this.jumpV = 10.5;
     this.frozen = false;
     this.seat = null; // {pos, facing, pose}
@@ -30,7 +31,7 @@ export class Player {
   get object() { return this.avatar.root; }
 
   teleport(x, y, z, facing) {
-    this.pos.set(x, y ?? this.world.groundAt(x, z, 50), z);
+    this.pos.set(x, y ?? this.world.groundAt(x, z, 0), z);
     this.vel.set(0, 0, 0);
     if (facing !== undefined) this.facing = facing;
     this.lastSafe.copy(this.pos);
@@ -58,6 +59,7 @@ export class Player {
 
   update(dt, input, camYaw) {
     const av = this.avatar;
+    const waterY = this.world.waterY ?? WATER_Y;
     if (this.seat) {
       av.update(dt, 0, false);
       if (input.getMove().x || input.getMove().y || input.consumeJump()) this.stand();
@@ -87,22 +89,22 @@ export class Player {
       this.grounded = false;
       this.onJump?.();
     }
-    this.vel.y -= 30 * dt;
+    this.vel.y -= this.gravity * dt;
 
     const prevX = this.pos.x, prevZ = this.pos.z;
     this.pos.x += this.vel.x * dt;
     this.pos.z += this.vel.z * dt;
     this.world.resolve(this.pos, this.vehicle ? (this.vehicle.water ? 1.2 : 0.9) : this.radius, this.pos.y);
     // water: on foot she swims, boats stay on water, cars and bikes stay on land
-    const depth = WATER_Y - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
+    const depth = waterY - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
     const boat = this.vehicle?.water;
     if ((boat && depth < 0.6) || (this.vehicle && !boat && depth > 0.5)) { this.pos.x = prevX; this.pos.z = prevZ; this.vel.x *= -0.2; this.vel.z *= -0.2; }
     this.clampBounds();
-    const deepNow = WATER_Y - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
-    this.swimming = !this.vehicle && !this.seat && deepNow > 1.0 && this.pos.y < WATER_Y + 1.5;
+    const deepNow = waterY - this.world.groundAt(this.pos.x, this.pos.z, this.pos.y + 1);
+    this.swimming = !this.vehicle && !this.seat && deepNow > 1.0 && this.pos.y < waterY + 1.5;
     if (boat || this.swimming) {
       // float at the surface (swimmers are mostly under water, head above)
-      const ty = boat ? WATER_Y : WATER_Y - 1.15;
+      const ty = boat ? WATER_Y : waterY - 1.15;
       this.pos.y += (ty - this.pos.y) * Math.min(1, dt * 8);
       this.vel.y = 0;
       this.grounded = true;
@@ -240,7 +242,7 @@ export class CameraRig {
         }
       }
     }
-    const gy = Math.max(this.world.groundAt(pos.x, pos.z, pos.y) + 0.6, WATER_Y + 0.5);
+    const gy = Math.max(this.world.groundAt(pos.x, pos.z, pos.y) + 0.6, (this.world.waterY ?? WATER_Y) + 0.5);
     if (pos.y < gy) pos.y = gy;
     this.camera.position.copy(pos);
     this.camera.lookAt(this.target);

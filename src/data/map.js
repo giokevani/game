@@ -90,6 +90,7 @@ function inRect(x, z, r, pad = 0) {
 
 // Is a point covered by something (for scattering trees/grass)?
 export function isBlocked(x, z, pad = 0) {
+  if(x>53-pad && x<123+pad && z>35-pad && z<45+pad) return true;
   if (Math.hypot(x-SKY_LIFT.x,z-SKY_LIFT.z)<4+pad) return true;
   for (const r of ROADS) if (inRect(x, z, r.rect, pad + 1)) return true;
   for (const p of PATHS) if (inRect(x, z, p.rect, pad)) return true;
